@@ -32,7 +32,7 @@ O esqueleto foi copiado do Work Order, só com o kit transversal, sem domínio:
 - `infrastructure/http`: filtros de exceção por camada, guard de autenticação deny-by-default, estratégia JWT de funcionário, interceptors e o middleware que devolve 404 JSON fora do prefixo;
 - `infrastructure/logging` e `infrastructure/telemetry`: uma linha JSON por evento no stdout, pela porta `ILogger` e por catálogos tipados, e o SDK OpenTelemetry carregado só por preload (`node --require ./dist/src/otel.js dist/src/main`);
 - `infrastructure/health`: vivacidade e prontidão, com encerramento gracioso;
-- `infrastructure/messaging`, `infrastructure/cache` e `infrastructure/clients`: relay do outbox, consumidor SQS, registro de handlers, adaptador Valkey e cliente HTTP interno (rotas `/internal/...` ainda não existem neste serviço).
+- `infrastructure/messaging`, `infrastructure/cache` e `infrastructure/clients`: relay do outbox, consumidor SQS, registro de handlers, adaptador Valkey e cliente HTTP interno (rotas `/internal/...` ainda não existem neste serviço; quando entrarem, precisam de `@Public()` e `@ApiExcludeController()`, porque o guard global também as cobre, e rota com `@Roles` precisa de `@UseGuards(RolesGuard)`, que não é global).
 
 Migration roda só como passo separado (serviço `migrate` do Compose, Job do Kubernetes no CD), nunca no `CMD` da imagem.
 

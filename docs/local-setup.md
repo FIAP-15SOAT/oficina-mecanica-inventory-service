@@ -89,7 +89,7 @@ npm ci
 # Gerar o Prisma Client (lê DATABASE_URL do .env)
 npm run prisma:generate
 
-# Subir só a infraestrutura; o serviço migrate aplica a migration e termina
+# Subir só a infraestrutura (a migration é aplicada no comando seguinte)
 docker compose up -d --wait postgres valkey localstack
 
 # Aplicar a migration no banco local

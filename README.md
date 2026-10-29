@@ -21,7 +21,7 @@ Serviço NestJS da solução Oficina Mecânica (FIAP 15SOAT), dono do contexto d
 ### Responsabilidade do Inventory
 
 - Dono do catálogo de serviços, peças e insumos, do saldo, das reservas e das movimentações de estoque.
-- Consome da fila `inventory.fifo` os comandos `inventory.stock.reserve` e `inventory.stock.consume` e publica `inventory.stock.reserved` e `inventory.stock.reservation_failed` no tópico `oficina-events.fifo`.
+- Consumirá da fila `inventory.fifo` os comandos `inventory.stock.reserve` e `inventory.stock.consume` e publicará `inventory.stock.reserved` e `inventory.stock.reservation_failed` no tópico `oficina-events.fifo`. A infraestrutura (consumidor, outbox e relay) já existe; os handlers entram na C-15.
 - Valida localmente o token RS256 de funcionário emitido pelo Identity e recusa token de cliente.
 
 ### O que a API expõe hoje
