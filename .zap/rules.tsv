@@ -13,5 +13,6 @@
 # Reflected input echoed back in a JSON response is not XSS for a pure JSON API:
 # the Content-Type is application/json (never text/html), so browsers do not execute
 # it — ZAP itself raises this only at LOW confidence for that reason. Calibrated out
-# after the first authenticated run flagged it on GET /api/services?name=<script>.
+# up front for any request value the API echoes in a JSON body, for example the path
+# in the 404 message of GET /api/health/live/<script>.
 40014	IGNORE	(Cross Site Scripting Weakness - Persistent in JSON Response)

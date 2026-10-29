@@ -1,0 +1,49 @@
+@startuml inventory-component
+title Inventory Service - Componentes (C4 nível 3)
+skinparam componentStyle rectangle
+skinparam shadowing false
+skinparam defaultTextAlignment center
+left to right direction
+
+actor "Funcionário / outros serviços\n[Pessoa / Sistema]" as client
+cloud "API Gateway / NLB\n[Sistema externo]" as gateway
+database "PostgreSQL 18\n[Banco: tabela outbox]" as pg
+database "Valkey 9.1\n[Cache]" as valkey
+queue "SNS FIFO\noficina-events.fifo\n[Tópico]" as sns
+queue "SQS FIFO\ninventory.fifo + DLQ\n[Fila]" as sqs
+
+rectangle "Inventory Service [Container: NestJS 12]" {
+  component "Borda HTTP\n[Controllers, Swagger, filtros]" as http
+  component "Guard de autenticação\n[AuthenticationGuard + StaffJwtStrategy, RS256]" as guard
+  component "Health\n[HealthController, ReadinessState]" as health
+  component "Clean Controllers e Use Cases\n[application + interface-adapters, ainda vazio]" as usecases
+  component "Catálogo de mensagens\n[domain/messaging]" as catalog
+  component "Unit of Work e Outbox Repository\n[Prisma]" as uow
+  component "Outbox Relay\n[OutboxRelayService, 500 ms, advisory lock]" as relay
+  component "Consumidor SQS\n[SqsConsumerService + MessageHandlerRegistry]" as consumer
+  component "Adaptador de cache\n[ICache + ValkeyCacheAdapter]" as cache
+  component "Cliente HTTP interno\n[IInternalHttpClient, /internal]" as internal
+  component "Logging e telemetria\n[pino, OpenTelemetry]" as obs
+}
+
+client --> gateway : HTTPS
+gateway --> http : HTTP + Bearer JWT
+http --> guard
+http --> health
+http --> usecases
+health --> pg : verifica o banco
+usecases --> catalog
+usecases --> uow
+usecases --> cache
+usecases --> internal
+uow --> pg : SQL (mesma transação)
+relay --> pg : lê e apaga lotes
+relay --> sns : Publish (MessageGroupId)
+sns --> sqs : filter policy por type
+consumer --> sqs : long polling
+consumer --> usecases : handlers por type
+cache --> valkey : cache-aside
+http ..> obs
+relay ..> obs
+consumer ..> obs
+@enduml
