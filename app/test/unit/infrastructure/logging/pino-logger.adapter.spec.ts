@@ -1,6 +1,7 @@
 import { Logger as NestLogger, PinoLogger } from 'nestjs-pino';
 
 import { defineLogEvent } from '@application/logging/log-event';
+import * as fieldRegistry from '@infrastructure/logging/field-registry';
 import { buildLoggerParams } from '@infrastructure/logging/logging.module';
 import * as payloadSanitizer from '@infrastructure/logging/redaction/payload-sanitizer';
 import { PinoLoggerAdapter } from '@infrastructure/logging/pino-logger.adapter';
@@ -206,6 +207,26 @@ describe('PinoLoggerAdapter', () => {
     expect(lines[0]['oficina.health.failure.category']).toBe('timeout');
 
     stderr.restore();
+  });
+
+  it('should mask a field the registry classifies as personal data', () => {
+    // The inventory vocabulary declares no personal data yet, so one declared key is reclassified.
+    const resolve = jest.spyOn(fieldRegistry, 'resolveLogicalField').mockReturnValueOnce({
+      key: 'oficina.dependency.name',
+      type: 'string',
+      cardinality: 'fixed',
+      owner: 'infrastructure-service',
+      sensitivity: 'pii',
+    });
+
+    adapter.event(TECHNICAL_EVENTS.HEALTH_DEGRADED, {
+      dependencyName: 'maria.silva@gmail.com',
+      healthFailureCategory: 'timeout',
+    });
+    resolve.mockRestore();
+
+    expect(lines[0]['oficina.dependency.name']).toBe('ma***va@gmail.com');
+    expect(lines[0]['oficina.health.failure.category']).toBe('timeout');
   });
 });
 

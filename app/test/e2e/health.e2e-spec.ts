@@ -1,4 +1,4 @@
-import type { INestApplication } from '@nestjs/common';
+import { Controller, Get, Inject, type INestApplication } from '@nestjs/common';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { Test } from '@nestjs/testing';
 import type { Server } from 'http';
@@ -6,6 +6,7 @@ import request from 'supertest';
 
 import { LIVENESS_PATH, READINESS_PATH } from '@infrastructure/health/health.constants';
 import { classifyHealthFailure } from '@infrastructure/health/postgres.health-check';
+import { Public } from '@infrastructure/http/decorators/public.decorator';
 import { HealthFailureCategory } from '@infrastructure/logging/technical-event.catalog';
 import { PrismaService } from '@infrastructure/persistence/prisma/prisma.service';
 
@@ -14,11 +15,30 @@ import { OutboxRelayService } from '../../src/infrastructure/messaging/outbox-re
 import { SqsConsumerService } from '../../src/infrastructure/messaging/sqs-consumer.service';
 import { configureApp } from '../../src/infrastructure/config/app-bootstrap';
 
-import { AuthTokens, registerAndLogin } from '../helpers/auth.helper';
-import { cleanDatabase } from '../helpers/db-cleanup.helper';
 import { LogCapture, TestContext, setupTestApp } from '../helpers/test-app.helper';
 
 const ACCESS_LOG_MESSAGE = 'http request';
+
+const IN_FLIGHT_PROBE_PATH = '/api/in-flight-probe';
+
+/** Hook the graceful-shutdown suite replaces to hold a request before it reaches the database. */
+const inFlightGate = { beforeQuery: (): Promise<void> => Promise.resolve() };
+
+/** Route that exists only in this suite: a request that really queries the pool. */
+@Public()
+@Controller('in-flight-probe')
+class InFlightProbeController {
+  constructor(@Inject(PrismaService) private readonly prisma: PrismaService) {}
+
+  @Get()
+  async query(): Promise<{ ok: number }> {
+    await inFlightGate.beforeQuery();
+
+    const [row] = await this.prisma.$queryRaw<{ ok: number }[]>`SELECT 1::int AS ok`;
+
+    return { ok: row.ok };
+  }
+}
 const EVENT_NAME = 'oficina.event.name';
 
 const HEALTH_FAILURE_CATEGORIES = [
@@ -134,7 +154,7 @@ describe('Health endpoints (E2E)', () => {
    */
   afterAll(async () => {
     await ctx.postgresContainer.stop();
-    await ctx.mailhogContainer.stop();
+    await ctx.valkeyContainer.stop();
   });
 
   beforeEach(() => {
@@ -165,7 +185,7 @@ describe('Health endpoints (E2E)', () => {
   );
 
   it('should keep emitting the access log line for a business route', async () => {
-    await request(httpServer).get('/api/customers').expect(401);
+    await request(httpServer).get('/api/rota-inexistente').expect(404);
 
     expect(accessLines(capture)).toHaveLength(1);
   });
@@ -236,11 +256,11 @@ describe('Health endpoints with the database unreachable (E2E)', () => {
    */
   afterAll(async () => {
     await ctx.app.close();
-    await ctx.mailhogContainer.stop();
+    await ctx.valkeyContainer.stop();
     await ctx.postgresContainer.stop();
   });
 
-  it('should report unavailability on readiness while liveness stays successful', async () => {
+  it('ready returns 503 and live 200 with PostgreSQL down', async () => {
     await request(httpServer).get(READINESS_PATH).expect(503);
     await request(httpServer).get(LIVENESS_PATH).expect(200);
   });
@@ -323,6 +343,33 @@ describe('Health endpoints with the database unreachable (E2E)', () => {
   });
 });
 
+describe('Health endpoints with the cache unreachable (E2E)', () => {
+  let ctx: TestContext;
+  let httpServer: Server;
+
+  beforeAll(async () => {
+    ctx = await setupTestApp();
+    httpServer = ctx.httpServer;
+
+    await waitUntilReady(httpServer);
+
+    await ctx.valkeyContainer.stop();
+  });
+
+  afterAll(async () => {
+    await ctx.app.close();
+    await ctx.postgresContainer.stop();
+  });
+
+  /** Readiness checks only PostgreSQL: a cache outage degrades latency, not availability. */
+  it('ready returns 200 with Valkey down', async () => {
+    const response = await request(httpServer).get(READINESS_PATH).expect(200);
+
+    expect(response.body).toEqual({ status: 'ok' });
+    await request(httpServer).get(LIVENESS_PATH).expect(200);
+  });
+});
+
 describe('Health endpoints during graceful shutdown (E2E)', () => {
   let ctx: TestContext;
   let httpServer: Server;
@@ -335,13 +382,12 @@ describe('Health endpoints during graceful shutdown (E2E)', () => {
     previousEnvironment = process.env.NODE_ENV;
     process.env.NODE_ENV = 'production';
 
-    ctx = await setupTestApp();
+    ctx = await setupTestApp({ controllers: [InFlightProbeController] });
     httpServer = ctx.httpServer;
 
     // The window is held only on a real signal, and the server must really be
     // listening for a request to cross the shutdown.
     await ctx.app.listen(0);
-    await cleanDatabase(ctx.prisma);
     await waitUntilReady(httpServer);
   });
 
@@ -349,7 +395,7 @@ describe('Health endpoints during graceful shutdown (E2E)', () => {
     process.env.NODE_ENV = previousEnvironment;
 
     await ctx.postgresContainer.stop();
-    await ctx.mailhogContainer.stop();
+    await ctx.valkeyContainer.stop();
   });
 
   it('should report unavailable readiness and successful liveness during the window', async () => {
@@ -370,25 +416,6 @@ describe('Health endpoints during graceful shutdown (E2E)', () => {
    * before the window.
    */
   it('should let an in-flight business request reach the database during the window', async () => {
-    const auth: AuthTokens = await registerAndLogin(
-      httpServer,
-      { name: 'Admin Drain', email: 'admin.drain@e2e.test', role: 'ADMIN' },
-      ctx.prisma,
-    );
-
-    const created = await request(httpServer)
-      .post('/api/services')
-      .set('Authorization', `Bearer ${auth.accessToken}`)
-      .send({ name: 'Troca de óleo drain', basePrice: 150.5, estimatedTimeMin: 45 })
-      .expect(201);
-
-    const serviceId = created.body.data.id as string;
-
-    const delegate = ctx.prisma.service as unknown as {
-      findUnique: (args: unknown) => Promise<unknown>;
-    };
-    const findUnique = delegate.findUnique.bind(ctx.prisma.service);
-
     let handlerReached!: () => void;
     const reached = new Promise<void>((resolve) => {
       handlerReached = resolve;
@@ -399,17 +426,14 @@ describe('Health endpoints during graceful shutdown (E2E)', () => {
       release = resolve;
     });
 
-    delegate.findUnique = async (args: unknown) => {
+    inFlightGate.beforeQuery = async () => {
       handlerReached();
 
       await released;
-
-      return findUnique(args);
     };
 
     const inFlight = request(httpServer)
-      .get(`/api/services/${serviceId}`)
-      .set('Authorization', `Bearer ${auth.accessToken}`)
+      .get(IN_FLIGHT_PROBE_PATH)
       .then((response) => response);
 
     await reached;
@@ -420,10 +444,10 @@ describe('Health endpoints during graceful shutdown (E2E)', () => {
 
     const response = await inFlight;
 
-    expect(response.status).toBe(200);
-    expect(response.body.data.id).toBe(serviceId);
+    inFlightGate.beforeQuery = () => Promise.resolve();
 
-    delegate.findUnique = findUnique;
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({ ok: 1 });
 
     await closing;
   });

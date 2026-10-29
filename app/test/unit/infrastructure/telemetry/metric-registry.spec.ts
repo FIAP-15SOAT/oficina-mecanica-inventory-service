@@ -1,3 +1,5 @@
+import { AggregationType } from '@opentelemetry/sdk-metrics';
+
 import {
   METRIC_ATTRIBUTE_REGISTRY,
   METRIC_REGISTRY,
@@ -34,5 +36,32 @@ describe('metric registry', () => {
 
   it('should return undefined for an attribute outside the logical vocabulary', () => {
     expect(resolveMetricAttribute('workOrderId')).toBeUndefined();
+  });
+});
+
+describe('metric registry views', () => {
+  afterEach(() => jest.restoreAllMocks());
+
+  it('should build a view only for an entry with a custom aggregation', () => {
+    // The registry is empty until C-15, so the entries are injected while the module loads.
+    const explicit = {
+      type: AggregationType.EXPLICIT_BUCKET_HISTOGRAM,
+      options: { boundaries: [1] },
+    };
+    jest.spyOn(Object, 'values').mockReturnValueOnce([
+      { key: 'oficina.test.default', aggregation: { type: AggregationType.DEFAULT } },
+      { key: 'oficina.test.histogram', aggregation: explicit },
+    ]);
+
+    let isolated!: typeof import('@infrastructure/telemetry/metric-registry');
+
+    jest.isolateModules(() => {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      isolated = require('@infrastructure/telemetry/metric-registry');
+    });
+
+    expect(isolated.METRIC_VIEWS).toEqual([
+      { instrumentName: 'oficina.test.histogram', aggregation: explicit },
+    ]);
   });
 });
