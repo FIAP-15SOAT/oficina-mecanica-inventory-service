@@ -29,6 +29,7 @@ import { createMockLogger } from '../../../helpers/logger-mock.factory';
 jest.mock('sqs-consumer');
 
 const QUEUE_URL = 'http://localhost:4566/000000000000/inventory.fifo';
+const TOPIC_ARN = 'arn:aws:sns:us-east-1:000000000000:oficina-events.fifo';
 const MESSAGE_ID = '6f1c1a8e-3b9a-4c1e-9c51-2f9d6f3b7a10';
 const WORK_ORDER_ID = '2a7c4d1e-8f3b-4a6c-9d2e-5b1f0c7e3a94';
 const QUOTE_ID = '9b3e2f1a-7c6d-4e5f-8a9b-0c1d2e3f4a5b';
@@ -101,6 +102,15 @@ describe('SqsConsumerService', () => {
     metrics.disable();
   });
 
+  // The real ConfigService falls back to process.env: the shell must not supply the queue name.
+  const shellQueueName = process.env.INVENTORY_QUEUE_NAME;
+  beforeAll(() => delete process.env.INVENTORY_QUEUE_NAME);
+  afterAll(() => {
+    if (shellQueueName !== undefined) {
+      process.env.INVENTORY_QUEUE_NAME = shellQueueName;
+    }
+  });
+
   beforeEach(async () => {
     await metricReader.collect();
     spanExporter.reset();
@@ -113,7 +123,7 @@ describe('SqsConsumerService', () => {
     service = new SqsConsumerService(
       sqs as unknown as SQSClient,
       registry,
-      new ConfigService({ INVENTORY_QUEUE_NAME: 'inventory.fifo' }),
+      new ConfigService({ INVENTORY_QUEUE_NAME: 'inventory.fifo', MESSAGING_TOPIC_ARN: TOPIC_ARN }),
       pinoLogger as unknown as PinoLogger,
       logger,
     );
@@ -133,7 +143,7 @@ describe('SqsConsumerService', () => {
   }
 
   describe('onApplicationBootstrap', () => {
-    it('should resolve the queue URL from INVENTORY_QUEUE_NAME and start the consumer', async () => {
+    it('resolves the queue url from the configured name', async () => {
       await service.onApplicationBootstrap();
 
       const command = sqs.send.mock.calls[0][0] as GetQueueUrlCommand;
@@ -153,6 +163,33 @@ describe('SqsConsumerService', () => {
         }),
       );
       expect(consumer.start).toHaveBeenCalled();
+    });
+
+    it('fails to start with a wrong queue name', () => {
+      const wrongVariable = new ConfigService({
+        WORK_ORDER_QUEUE_NAME: 'inventory.fifo',
+        MESSAGING_TOPIC_ARN: TOPIC_ARN,
+      });
+
+      expect(
+        () =>
+          new SqsConsumerService(
+            sqs as unknown as SQSClient,
+            registry,
+            wrongVariable,
+            pinoLogger as unknown as PinoLogger,
+            logger,
+          ),
+      ).toThrow('INVENTORY_QUEUE_NAME');
+    });
+
+    it('does not start the consumer when the queue does not exist', async () => {
+      const missingQueue = new Error('The specified queue does not exist.');
+      sqs.send.mockRejectedValueOnce(missingQueue);
+      (Consumer.create as jest.Mock).mockClear();
+
+      await expect(service.onApplicationBootstrap()).rejects.toBe(missingQueue);
+      expect(Consumer.create).not.toHaveBeenCalled();
     });
 
     it('should start polling with tracing suppressed, so receive and delete calls create no spans', async () => {
