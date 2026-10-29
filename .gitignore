@@ -31,3 +31,6 @@ CLAUDE.md
 !.github/workflows/
 !.github/actions/
 openspec/
+
+superpowers/
+.superpowers/
