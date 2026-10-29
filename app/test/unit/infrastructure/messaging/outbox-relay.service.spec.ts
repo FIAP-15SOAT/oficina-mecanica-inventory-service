@@ -186,6 +186,16 @@ describe('OutboxRelayService', () => {
       expect(rows).toHaveLength(1);
     });
 
+    it('does not publish when the outbox is empty', async () => {
+      const { prisma, tx } = createPrisma([]);
+
+      await expect(createRelay(prisma).runBatch()).resolves.toBeUndefined();
+
+      expect(sns.send).not.toHaveBeenCalled();
+      expect(tx.outboxMessage.deleteMany).not.toHaveBeenCalled();
+      expect(logger.event).not.toHaveBeenCalled();
+    });
+
     it('should skip the batch when another replica holds the relay lock', async () => {
       const { prisma, tx } = createPrisma([createRow(1)], false);
 
