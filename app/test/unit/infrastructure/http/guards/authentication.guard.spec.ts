@@ -35,7 +35,7 @@ describe('AuthenticationGuard', () => {
     guard = new AuthenticationGuard(new Reflector(), staff);
   });
 
-  it('should allow a @Public() route without delegating', async () => {
+  it('lets @Public routes through', async () => {
     const result = await guard.canActivate(
       contextFor(RoutesController, RoutesController.prototype.publicRoute),
     );
@@ -53,7 +53,7 @@ describe('AuthenticationGuard', () => {
     expect(staff.canActivate).not.toHaveBeenCalled();
   });
 
-  it('should delegate to the staff guard when the route has no marker', async () => {
+  it('requires staff token otherwise', async () => {
     staff.canActivate.mockResolvedValue(false);
     const context = contextFor(RoutesController, RoutesController.prototype.staffRoute);
 
