@@ -170,12 +170,9 @@ export async function seedServices(prisma: PrismaClient): Promise<Record<string,
 
   for (const service of services) {
     const result = await prisma.service.upsert({
-      where: { name: service.name },
-      update: {
-        description: service.description,
-        basePrice: service.basePrice,
-        estimatedTimeMin: service.estimatedTimeMin,
-      },
+      where: { id: SEED_IDS.services[service.name] },
+      // Empty on purpose: a re-seed must never overwrite edits made after the first load.
+      update: {},
       create: {
         id: SEED_IDS.services[service.name],
         name: service.name,

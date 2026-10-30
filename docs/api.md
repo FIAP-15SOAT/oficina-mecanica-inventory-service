@@ -62,7 +62,7 @@ Um conflito de versão concorrente na peça também responde **409**; repita a c
 
 ### Exclusão
 
-`DELETE` de serviço ou peça consulta o dono dos orçamentos (Work Order, `QUOTE_ITEMS_SERVICE_URL`) antes de excluir. Responde **409** se o item está em orçamento ou ordem de serviço; no caso da peça, também se há estoque reservado ou se há movimentações e reservas no histórico (a chave estrangeira é `RESTRICT`). Se o dono não responde (rede ou erro 5xx), responde **503** e nada é excluído. Um 4xx do dono é repassado com o status e a mensagem dele. Enquanto o Work Order não expõe `/internal/services/:id/quote-items` e `/internal/parts-supplies/:id/quote-items`, a exclusão não conclui.
+`DELETE` de serviço ou peça consulta o dono dos orçamentos (Work Order, `QUOTE_ITEMS_SERVICE_URL`) antes de excluir. Responde **409** se o item está em orçamento ou ordem de serviço; no caso da peça, também se há estoque reservado ou se há movimentações e reservas no histórico (a chave estrangeira é `RESTRICT`). Se o dono não responde (rede ou erro 5xx), responde **503** e nada é excluído. Um 4xx do dono (por exemplo 404, porque a rota ainda não existe) também vira **503** com a mensagem de indisponibilidade, e nada é excluído. Enquanto o Work Order não expõe `/internal/services/:id/quote-items` e `/internal/parts-supplies/:id/quote-items`, a exclusão não conclui.
 
 ## Movimentações e reservas
 

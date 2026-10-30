@@ -75,4 +75,25 @@ describe('Catalog seed (E2E)', () => {
     expect(await prisma.partSupply.count()).toBe(8);
     expect(await prisma.service.count()).toBe(25);
   });
+
+  it('does not overwrite or fail on edited, renamed or re-keyed rows', async () => {
+    const [editedName, renamedName] = Object.keys(SEED_IDS.services);
+    const sku = 'OLEO-5W30-1L';
+    await prisma.service.update({
+      where: { name: editedName },
+      data: { basePrice: 999, description: 'Edited' },
+    });
+    await prisma.service.update({ where: { name: renamedName }, data: { name: 'Renamed' } });
+    await prisma.partSupply.update({ where: { sku }, data: { sku: 'CHANGED-SKU' } });
+
+    run('npx prisma db seed');
+
+    const edited = await prisma.service.findUniqueOrThrow({ where: { name: editedName } });
+    expect(Number(edited.basePrice)).toBe(999);
+    expect(edited.description).toBe('Edited');
+    expect(await prisma.service.findUnique({ where: { name: 'Renamed' } })).not.toBeNull();
+    expect(await prisma.service.count()).toBe(25);
+    expect(await prisma.partSupply.findUnique({ where: { sku: 'CHANGED-SKU' } })).not.toBeNull();
+    expect(await prisma.partSupply.count()).toBe(8);
+  });
 });

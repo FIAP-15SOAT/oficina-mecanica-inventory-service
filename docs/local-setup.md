@@ -117,4 +117,4 @@ npm run db:setup
 npm run prisma:seed
 ```
 
-O seed é idempotente: serviço existente é atualizado e peça existente nunca é alterada, para não sobrescrever o saldo.
+O seed é idempotente: serviço e peça só são criados quando o id canônico não existe, e o que já existe nunca é alterado (saldo e edições são preservados).

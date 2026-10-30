@@ -117,7 +117,7 @@ export async function seedPartSupplies(prisma: PrismaClient): Promise<Record<str
 
   for (const part of partSupplies) {
     const record = await prisma.partSupply.upsert({
-      where: { sku: part.sku },
+      where: { id: SEED_IDS.partSupplies[part.sku] },
       // Empty on purpose: a re-seed must never overwrite stock moved by reservations.
       update: {},
       create: {

@@ -1,5 +1,5 @@
 {
-  "$source": "contrato provisório (§9.3): GET /internal/services/:serviceId/quote-items e GET /internal/parts-supplies/:partSupplyId/quote-items, hoje no work-order e depois no Billing (C-23)",
+  "$source": "fixture provisória do endpoint do dono dos orçamentos: GET /internal/services/:serviceId/quote-items e GET /internal/parts-supplies/:partSupplyId/quote-items",
   "$description": "Corpo 200 devolvido pelo dono dos orçamentos: lista não vazia = item em uso; lista vazia = livre. Usado nos specs do client e como resposta do dono nos e2e de exclusão.",
   "inUse": {
     "data": [

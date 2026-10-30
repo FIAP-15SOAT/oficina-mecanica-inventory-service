@@ -27,4 +27,4 @@ Cache-aside por id no Valkey, só do dono: `inventory:service:<id>` e `inventory
 
 ## Seed
 
-`npm run prisma:seed` (`prisma db seed`) carrega 25 serviços e 8 peças com os ids canônicos compartilhados entre os serviços. É idempotente: serviço existente (chave `name`) tem descrição, preço e tempo atualizados; peça existente (chave `sku`) nunca é alterada, para não sobrescrever saldo movimentado por reservas. `npm run db:setup` aplica as migrations, gera o client e roda o seed. No cluster, o Job `DB Migrate & Seed` roda `prisma migrate deploy` e depois `prisma db seed`.
+`npm run prisma:seed` (`prisma db seed`) carrega 25 serviços e 8 peças com os ids canônicos compartilhados entre os serviços. É idempotente: serviço e peça só são criados quando o id canônico não existe (`upsert` por `id` com `update` vazio), e o que já existe nunca é alterado, para não sobrescrever saldo movimentado por reservas nem edições; renomear um serviço ou mudar um SKU não faz o seed falhar. `npm run db:setup` aplica as migrations, gera o client e roda o seed. No cluster, o Job `DB Migrate & Seed` roda `prisma migrate deploy` e depois `prisma db seed`.

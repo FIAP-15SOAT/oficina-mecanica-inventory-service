@@ -22,7 +22,7 @@ type OwnerBehavior =
   // Never answers: the client gives up at its 2 s deadline.
   | { kind: 'hang' };
 
-// Stands in for the owner of the quotes (work-order until C-23, then Billing).
+// Stands in for the owner of the quotes (work-order today, Billing later).
 class QuoteOwnerStub {
   readonly requests: string[] = [];
   behavior: OwnerBehavior = { kind: 'reply', status: 200, body: free };
@@ -166,11 +166,11 @@ describe('Catalog delete (E2E)', () => {
       expect(await ctx.prisma.service.count({ where: { id } })).toBe(1);
     });
 
-    it('should relay a 4xx from the owner', async () => {
+    it('should return 503 when the owner answers a 4xx', async () => {
       const id = await createService();
       owner.behavior = { kind: 'reply', status: 404, body: { message: 'Rota não encontrada' } };
 
-      await deleteService(id).expect(404);
+      await deleteService(id).expect(503);
 
       expect(await ctx.prisma.service.count({ where: { id } })).toBe(1);
     });
@@ -241,11 +241,11 @@ describe('Catalog delete (E2E)', () => {
       expect(await ctx.prisma.partSupply.count({ where: { id } })).toBe(1);
     });
 
-    it('should relay a 4xx from the owner', async () => {
+    it('should return 503 when the owner answers a 4xx', async () => {
       const id = await createPartSupply();
       owner.behavior = { kind: 'reply', status: 404, body: { message: 'Rota não encontrada' } };
 
-      await deletePartSupply(id).expect(404);
+      await deletePartSupply(id).expect(503);
 
       expect(await ctx.prisma.partSupply.count({ where: { id } })).toBe(1);
     });

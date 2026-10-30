@@ -79,7 +79,7 @@ A porta `ICache` (`get`, `set` com TTL, `delete(keys[])`) tem o adaptador `Valke
 
 ## Consulta de uso antes de excluir
 
-`DELETE` de serviço ou de peça pergunta ao dono dos orçamentos, por `GET /internal/services/:id/quote-items` e `GET /internal/parts-supplies/:id/quote-items` (base em `QUOTE_ITEMS_SERVICE_URL`), se o item está em uso. Uma resposta fora do formato `{ data: [...] }` conta como indisponibilidade, nunca como "não usado". Item em uso responde 409; dono fora do ar (rede ou 5xx) responde 503 e nada é excluído; 4xx do dono é repassado.
+`DELETE` de serviço ou de peça pergunta ao dono dos orçamentos, por `GET /internal/services/:id/quote-items` e `GET /internal/parts-supplies/:id/quote-items` (base em `QUOTE_ITEMS_SERVICE_URL`), se o item está em uso. Uma resposta fora do formato `{ data: [...] }` conta como indisponibilidade, nunca como "não usado". Item em uso responde 409; dono fora do ar (rede ou 5xx) responde 503 e nada é excluído; 4xx do dono também responde 503, sem repassar o status nem a mensagem dele.
 
 ## Autenticação e Swagger
 

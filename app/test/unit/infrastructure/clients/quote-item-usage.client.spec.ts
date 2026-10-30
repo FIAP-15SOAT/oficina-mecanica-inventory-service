@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import { ConfigService } from '@nestjs/config';
 
 import { IInternalHttpClient } from '@application/ports/output/internal-http-client.interface';
+import { ServiceRequestRejectedException } from '@application/exceptions/service-request-rejected.exception';
 import { QuoteItemUsageClient } from '@infrastructure/clients/quote-item-usage.client';
 import { ServiceIntegrationException } from '@infrastructure/exceptions/service-integration.exception';
 
@@ -62,6 +63,21 @@ describe('QuoteItemUsageClient', () => {
       http.request.mockRejectedValue(new ServiceIntegrationException('down'));
 
       await expect(client.isServiceInUse('svc-1')).rejects.toBeInstanceOf(
+        ServiceIntegrationException,
+      );
+    });
+  });
+
+  describe('4xx from the owner', () => {
+    it('should translate the rejection into ServiceIntegrationException', async () => {
+      http.request.mockRejectedValue(
+        new ServiceRequestRejectedException(404, 'Rota não encontrada'),
+      );
+
+      await expect(client.isServiceInUse('svc-1')).rejects.toThrow(
+        new ServiceIntegrationException('Serviço de destino indisponível'),
+      );
+      await expect(client.isPartSupplyInUse('part-1')).rejects.toBeInstanceOf(
         ServiceIntegrationException,
       );
     });
