@@ -1,5 +1,10 @@
 export type LogicalFieldName =
   | 'workOrderId'
+  | 'partSupplyId'
+  | 'partSupplyName'
+  | 'movementType'
+  | 'movementQuantity'
+  | 'currentQuantity'
   | 'port'
   | 'signal'
   | 'dependencyName'
