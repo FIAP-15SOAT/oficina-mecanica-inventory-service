@@ -21,6 +21,7 @@ import { PartSupplyModule } from './infrastructure/http/controllers/part-supply/
 import { StockModule } from './infrastructure/http/controllers/stock/stock.module';
 import { InternalCatalogModule } from './infrastructure/http/controllers/internal/internal-catalog.module';
 import { ClientsModule } from './infrastructure/clients/clients.module';
+import { StockMessagingModule } from './infrastructure/messaging/stock-messaging.module';
 
 @Module({
   imports: [
@@ -38,6 +39,7 @@ import { ClientsModule } from './infrastructure/clients/clients.module';
     PartSupplyModule,
     StockModule,
     InternalCatalogModule,
+    StockMessagingModule,
   ],
   providers: [
     {

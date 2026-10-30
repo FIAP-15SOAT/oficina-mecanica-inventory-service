@@ -56,6 +56,8 @@ export interface SetupTestAppOptions {
   controllers?: Type[];
   /** Starts LocalStack with the messaging topology and runs the real relay and consumer. */
   withMessaging?: boolean;
+  /** Modules swapped before compile, as `[original, replacement]` pairs. */
+  overrideModules?: [Type, Type][];
 }
 
 interface LogCaptureSeam {
@@ -160,6 +162,10 @@ export async function setupTestApp(options: SetupTestAppOptions = {}): Promise<T
   if (!localstackContainer) {
     builder.overrideProvider(OutboxRelayService).useValue({});
     builder.overrideProvider(SqsConsumerService).useValue({});
+  }
+
+  for (const [original, replacement] of options.overrideModules ?? []) {
+    builder.overrideModule(original).useModule(replacement);
   }
 
   const captureLogs = options.captureLogs === true || options.captureBootstrap === true;
