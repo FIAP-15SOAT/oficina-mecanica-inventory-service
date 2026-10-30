@@ -26,7 +26,7 @@ const PROBE_PATH = '/api/auth-guard-probe';
 const UNAUTHORIZED = {
   statusCode: 401,
   error: 'Unauthorized',
-  message: 'Token de autenticação inválido ou ausente.',
+  message: 'Token de autenticação inválido ou ausente',
 };
 const ADMIN = { sub: 'staff-uuid-1', email: 'admin@example.com', role: UserRole.ADMIN };
 
