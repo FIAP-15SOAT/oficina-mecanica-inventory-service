@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { Prisma } from '@generated/client';
 
+import { ResourceNotFoundException } from '@application/exceptions/resource-not-found.exception';
 import { Service } from '@domain/entities/service.entity';
 
 import { PrismaServiceRepository } from '@infrastructure/persistence/prisma/repositories/prisma-service.repository';
@@ -307,6 +308,24 @@ describe('PrismaServiceRepository', () => {
       await repository.delete(id);
 
       expect(prisma.service.delete).toHaveBeenCalledWith({ where: { id } });
+    });
+
+    it('should throw ResourceNotFoundException when the record was already removed (P2025)', async () => {
+      prisma.service.delete.mockRejectedValue(
+        new Prisma.PrismaClientKnownRequestError('Not found', {
+          code: 'P2025',
+          clientVersion: '5.0.0',
+        }),
+      );
+
+      await expect(repository.delete('svc-1')).rejects.toBeInstanceOf(ResourceNotFoundException);
+    });
+
+    it('should rethrow any other error', async () => {
+      const error = new Error('db down');
+      prisma.service.delete.mockRejectedValue(error);
+
+      await expect(repository.delete('svc-1')).rejects.toBe(error);
     });
   });
 });

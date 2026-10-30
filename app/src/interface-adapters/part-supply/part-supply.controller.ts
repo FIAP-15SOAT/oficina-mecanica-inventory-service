@@ -2,6 +2,7 @@ import { ICreatePartSupplyUseCase } from '@application/ports/input/part-supply/c
 import { IFindAllPartsSuppliesUseCase } from '@application/ports/input/part-supply/find-all-parts-supplies.use-case.interface';
 import { IFindPartSupplyByIdUseCase } from '@application/ports/input/part-supply/find-part-supply-by-id.use-case.interface';
 import { IUpdatePartSupplyUseCase } from '@application/ports/input/part-supply/update-part-supply.use-case.interface';
+import { IDeletePartSupplyUseCase } from '@application/ports/input/part-supply/delete-part-supply.use-case.interface';
 import { IUpdateStockUseCase } from '@application/ports/input/part-supply/update-stock.use-case.interface';
 
 import { CreatePartSupplyRequest } from './requests/create-part-supply-request';
@@ -22,6 +23,7 @@ export class PartSupplyController {
     private readonly findPartSupplyByIdUseCase: IFindPartSupplyByIdUseCase,
     private readonly updatePartSupplyUseCase: IUpdatePartSupplyUseCase,
     private readonly updateStockUseCase: IUpdateStockUseCase,
+    private readonly deletePartSupplyUseCase: IDeletePartSupplyUseCase,
   ) {}
 
   async create(input: CreatePartSupplyRequest): Promise<PartSupplyDataResponse> {
@@ -60,5 +62,9 @@ export class PartSupplyController {
   async updateStock(id: string, input: UpdateStockRequest): Promise<PartSupplyDataResponse> {
     const partSupply = await this.updateStockUseCase.execute({ partSupplyId: id, ...input });
     return PartSupplyPresenter.toDataResponse(partSupply);
+  }
+
+  async delete(id: string): Promise<void> {
+    await this.deletePartSupplyUseCase.execute(id);
   }
 }

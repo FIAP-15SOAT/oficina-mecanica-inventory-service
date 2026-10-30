@@ -1,6 +1,8 @@
 import { randomUUID } from 'node:crypto';
 import { Prisma } from '@generated/client';
 
+import { ResourceConflictException } from '@application/exceptions/resource-conflict.exception';
+import { ResourceNotFoundException } from '@application/exceptions/resource-not-found.exception';
 import { PartSupply } from '@domain/entities/part-supply.entity';
 import { PartSupplyCategory } from '@domain/enums/part-supply-category.enum';
 import { Unit } from '@domain/enums/unit.enum';
@@ -309,6 +311,49 @@ describe('PrismaPartSupplyRepository', () => {
       expect(prisma.partSupply.delete).toHaveBeenCalledWith({
         where: { id },
       });
+    });
+
+    it('should throw ResourceNotFoundException when the record was already removed (P2025)', async () => {
+      prisma.partSupply.delete.mockRejectedValue(
+        new Prisma.PrismaClientKnownRequestError('Not found', {
+          code: 'P2025',
+          clientVersion: '5.0.0',
+        }),
+      );
+
+      await expect(repository.delete('part-1')).rejects.toBeInstanceOf(ResourceNotFoundException);
+    });
+
+    it('should throw ResourceConflictException when stock history references the part (P2003)', async () => {
+      prisma.partSupply.delete.mockRejectedValue(
+        new Prisma.PrismaClientKnownRequestError('FK', {
+          code: 'P2003',
+          clientVersion: '5.0.0',
+        }),
+      );
+
+      await expect(repository.delete('part-1')).rejects.toThrow(
+        new ResourceConflictException(
+          'Peça ou insumo não pode ser excluído pois possui movimentações de estoque ou reservas.',
+        ),
+      );
+    });
+
+    it('should rethrow other Prisma errors', async () => {
+      const error = new Prisma.PrismaClientKnownRequestError('Other', {
+        code: 'P2002',
+        clientVersion: '5.0.0',
+      });
+      prisma.partSupply.delete.mockRejectedValue(error);
+
+      await expect(repository.delete('part-1')).rejects.toBe(error);
+    });
+
+    it('should rethrow errors that are not Prisma errors', async () => {
+      const error = new Error('db down');
+      prisma.partSupply.delete.mockRejectedValue(error);
+
+      await expect(repository.delete('part-1')).rejects.toBe(error);
     });
   });
 });

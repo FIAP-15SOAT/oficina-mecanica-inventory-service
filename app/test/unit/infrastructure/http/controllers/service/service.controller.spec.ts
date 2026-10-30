@@ -27,6 +27,7 @@ describe('ServiceController', () => {
       { execute: jest.fn() },
       { execute: jest.fn() },
       { execute: jest.fn() },
+      { execute: jest.fn() },
     );
     httpController = new ServiceController(cleanController);
   });
@@ -86,6 +87,16 @@ describe('ServiceController', () => {
 
       expect(result).toBe(response);
       expect(cleanController.update).toHaveBeenCalledWith(id, serviceRequestStub);
+    });
+  });
+
+  describe('delete', () => {
+    it('should delegate to the clean controller', async () => {
+      const id = randomUUID();
+      jest.spyOn(cleanController, 'delete').mockResolvedValue(undefined);
+
+      await expect(httpController.delete(id)).resolves.toBeUndefined();
+      expect(cleanController.delete).toHaveBeenCalledWith(id);
     });
   });
 });

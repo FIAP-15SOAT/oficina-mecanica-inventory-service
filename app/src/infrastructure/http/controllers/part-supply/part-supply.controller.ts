@@ -1,7 +1,10 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
+  HttpCode,
+  HttpStatus,
   Param,
   ParseUUIDPipe,
   Patch,
@@ -17,11 +20,13 @@ import {
   ApiCreatedResponse,
   ApiForbiddenResponse,
   ApiInternalServerErrorResponse,
+  ApiNoContentResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
   ApiParam,
   ApiProduces,
+  ApiServiceUnavailableResponse,
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
@@ -127,5 +132,26 @@ export class PartSupplyController {
     @Body() request: UpdateStockDto,
   ): Promise<PartSupplyDataResponseDto> {
     return this.controller.updateStock(id, request);
+  }
+
+  @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @Roles(UserRole.ADMIN)
+  @ApiOperation({ summary: 'Excluir Peça ou Insumo (somente Admin)' })
+  @ApiParam({ name: 'id', format: 'uuid', description: 'ID da Peça ou Insumo' })
+  @ApiNoContentResponse({ description: 'Peça ou Insumo excluído' })
+  @ApiBadRequestResponse({ description: 'ID inválido (UUID esperado)' })
+  @ApiUnauthorizedResponse({ description: 'Não autenticado' })
+  @ApiForbiddenResponse({ description: 'Acesso negado' })
+  @ApiNotFoundResponse({ description: 'Peça ou Insumo não encontrado' })
+  @ApiConflictResponse({
+    description:
+      'Estoque reservado, vínculo com ordens de serviço ou orçamentos, ou movimentações de estoque e reservas no histórico',
+  })
+  @ApiServiceUnavailableResponse({
+    description: 'Serviço dono dos orçamentos indisponível; nada foi excluído',
+  })
+  delete(@Param('id', ParseUUIDPipe) id: string): Promise<void> {
+    return this.controller.delete(id);
   }
 }

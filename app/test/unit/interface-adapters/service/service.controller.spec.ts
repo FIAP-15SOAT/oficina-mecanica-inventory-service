@@ -3,6 +3,7 @@ import { ServiceController } from '@interface-adapters/service/service.controlle
 import { ICreateServiceUseCase } from '@application/ports/input/service/create-service.use-case.interface';
 import { IFindServiceByIdUseCase } from '@application/ports/input/service/find-service-by-id.use-case.interface';
 import { IFindAllServicesPaginatedUseCase } from '@application/ports/input/service/find-all-services-paginated.use-case.interface';
+import { IDeleteServiceUseCase } from '@application/ports/input/service/delete-service.use-case.interface';
 import { IUpdateServiceUseCase } from '@application/ports/input/service/update-service.use-case.interface';
 
 import { ServicePresenter } from '@interface-adapters/service/service.presenter';
@@ -18,6 +19,7 @@ describe('ServiceController', () => {
   let findByIdUseCase: jest.Mocked<IFindServiceByIdUseCase>;
   let findAllPaginatedUseCase: jest.Mocked<IFindAllServicesPaginatedUseCase>;
   let updateUseCase: jest.Mocked<IUpdateServiceUseCase>;
+  let deleteUseCase: jest.Mocked<IDeleteServiceUseCase>;
 
   const createRequestStub: CreateServiceRequest = {
     name: 'Troca de óleo',
@@ -31,12 +33,14 @@ describe('ServiceController', () => {
     findByIdUseCase = { execute: jest.fn() };
     findAllPaginatedUseCase = { execute: jest.fn() };
     updateUseCase = { execute: jest.fn() };
+    deleteUseCase = { execute: jest.fn() };
 
     controller = new ServiceController(
       createUseCase,
       findByIdUseCase,
       findAllPaginatedUseCase,
       updateUseCase,
+      deleteUseCase,
     );
   });
 
@@ -111,6 +115,15 @@ describe('ServiceController', () => {
 
       expect(result).toEqual(ServicePresenter.toDataResponse(updated));
       expect(updateUseCase.execute).toHaveBeenCalledWith(updated.id, updateRequest);
+    });
+  });
+
+  describe('delete', () => {
+    it('should run the use case and return nothing', async () => {
+      deleteUseCase.execute.mockResolvedValue(undefined);
+
+      await expect(controller.delete('svc-1')).resolves.toBeUndefined();
+      expect(deleteUseCase.execute).toHaveBeenCalledWith('svc-1');
     });
   });
 });

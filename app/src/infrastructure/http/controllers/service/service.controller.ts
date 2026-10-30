@@ -1,7 +1,10 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
+  HttpCode,
+  HttpStatus,
   Param,
   ParseUUIDPipe,
   Post,
@@ -16,11 +19,13 @@ import {
   ApiCreatedResponse,
   ApiForbiddenResponse,
   ApiInternalServerErrorResponse,
+  ApiNoContentResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
   ApiParam,
   ApiProduces,
+  ApiServiceUnavailableResponse,
   ApiTags,
   ApiUnauthorizedResponse,
   ApiUnprocessableEntityResponse,
@@ -99,5 +104,25 @@ export class ServiceController {
     @Body() request: UpdateServiceRequestDto,
   ): Promise<ServiceDataResponseDto> {
     return this.controller.update(id, request);
+  }
+
+  @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @Roles(UserRole.ADMIN)
+  @ApiOperation({ summary: 'Excluir serviço (somente Admin)' })
+  @ApiParam({ name: 'id', format: 'uuid', description: 'ID do serviço' })
+  @ApiNoContentResponse({ description: 'Serviço excluído' })
+  @ApiBadRequestResponse({ description: 'ID inválido (UUID esperado)' })
+  @ApiUnauthorizedResponse({ description: 'Não autenticado' })
+  @ApiForbiddenResponse({ description: 'Acesso negado' })
+  @ApiNotFoundResponse({ description: 'Serviço não encontrado' })
+  @ApiConflictResponse({
+    description: 'Serviço vinculado a ordens de serviço ou orçamentos',
+  })
+  @ApiServiceUnavailableResponse({
+    description: 'Serviço dono dos orçamentos indisponível; nada foi excluído',
+  })
+  delete(@Param('id', ParseUUIDPipe) id: string): Promise<void> {
+    return this.controller.delete(id);
   }
 }

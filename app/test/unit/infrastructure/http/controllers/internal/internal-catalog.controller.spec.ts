@@ -20,8 +20,10 @@ describe('InternalCatalogController', () => {
       { execute: jest.fn() },
       { execute: jest.fn() },
       { execute: jest.fn() },
+      { execute: jest.fn() },
     );
     partSupplyController = new PartSupplyCleanController(
+      { execute: jest.fn() },
       { execute: jest.fn() },
       { execute: jest.fn() },
       { execute: jest.fn() },

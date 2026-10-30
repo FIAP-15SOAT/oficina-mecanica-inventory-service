@@ -1,6 +1,7 @@
 import { ICreateServiceUseCase } from '@application/ports/input/service/create-service.use-case.interface';
 import { IFindServiceByIdUseCase } from '@application/ports/input/service/find-service-by-id.use-case.interface';
 import { IFindAllServicesPaginatedUseCase } from '@application/ports/input/service/find-all-services-paginated.use-case.interface';
+import { IDeleteServiceUseCase } from '@application/ports/input/service/delete-service.use-case.interface';
 import { IUpdateServiceUseCase } from '@application/ports/input/service/update-service.use-case.interface';
 
 import { CreateServiceRequest } from './requests/create-service-request';
@@ -16,6 +17,7 @@ export class ServiceController {
     private readonly findServiceByIdUseCase: IFindServiceByIdUseCase,
     private readonly findAllServicesPaginatedUseCase: IFindAllServicesPaginatedUseCase,
     private readonly updateServiceUseCase: IUpdateServiceUseCase,
+    private readonly deleteServiceUseCase: IDeleteServiceUseCase,
   ) {}
 
   async create(input: CreateServiceRequest): Promise<ServiceDataResponse> {
@@ -41,5 +43,9 @@ export class ServiceController {
   async update(id: string, input: UpdateServiceRequest): Promise<ServiceDataResponse> {
     const service = await this.updateServiceUseCase.execute(id, input);
     return ServicePresenter.toDataResponse(service);
+  }
+
+  async delete(id: string): Promise<void> {
+    await this.deleteServiceUseCase.execute(id);
   }
 }

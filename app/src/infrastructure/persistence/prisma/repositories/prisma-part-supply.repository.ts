@@ -3,6 +3,7 @@ import { Prisma, PartSupply as PrismaPartSupply } from '@generated/client';
 import { PrismaService } from '@infrastructure/persistence/prisma/prisma.service';
 
 import { ResourceConflictException } from '@application/exceptions/resource-conflict.exception';
+import { ResourceNotFoundException } from '@application/exceptions/resource-not-found.exception';
 import { ConcurrencyException } from '@infrastructure/exceptions/concurrency.exception';
 
 import { PartSupply } from '@domain/entities/part-supply.entity';
@@ -133,6 +134,22 @@ export class PrismaPartSupplyRepository implements IPartSupplyRepository {
   }
 
   async delete(id: string): Promise<void> {
-    await this.prisma.partSupply.delete({ where: { id } });
+    try {
+      await this.prisma.partSupply.delete({ where: { id } });
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        // Removed by a concurrent request between the existence check and the delete.
+        if (error.code === 'P2025') {
+          throw new ResourceNotFoundException('Peça ou Insumo', id);
+        }
+        // ON DELETE RESTRICT from stock_movements and stock_reservations.
+        if (error.code === 'P2003') {
+          throw new ResourceConflictException(
+            'Peça ou insumo não pode ser excluído pois possui movimentações de estoque ou reservas.',
+          );
+        }
+      }
+      throw error;
+    }
   }
 }

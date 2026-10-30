@@ -36,6 +36,7 @@ describe('PartSupplyController', () => {
       { execute: jest.fn() },
       { execute: jest.fn() },
       { execute: jest.fn() },
+      { execute: jest.fn() },
     );
     httpController = new PartSupplyController(cleanController);
   });
@@ -127,6 +128,16 @@ describe('PartSupplyController', () => {
 
       expect(result).toBe(response);
       expect(cleanController.updateStock).toHaveBeenCalledWith(id, dto);
+    });
+  });
+
+  describe('delete', () => {
+    it('should delegate to the clean controller', async () => {
+      const id = randomUUID();
+      jest.spyOn(cleanController, 'delete').mockResolvedValue(undefined);
+
+      await expect(httpController.delete(id)).resolves.toBeUndefined();
+      expect(cleanController.delete).toHaveBeenCalledWith(id);
     });
   });
 });

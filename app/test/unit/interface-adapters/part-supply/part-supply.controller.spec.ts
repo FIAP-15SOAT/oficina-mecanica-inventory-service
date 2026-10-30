@@ -7,6 +7,7 @@ import { ICreatePartSupplyUseCase } from '@application/ports/input/part-supply/c
 import { IFindAllPartsSuppliesUseCase } from '@application/ports/input/part-supply/find-all-parts-supplies.use-case.interface';
 import { IFindPartSupplyByIdUseCase } from '@application/ports/input/part-supply/find-part-supply-by-id.use-case.interface';
 import { IUpdatePartSupplyUseCase } from '@application/ports/input/part-supply/update-part-supply.use-case.interface';
+import { IDeletePartSupplyUseCase } from '@application/ports/input/part-supply/delete-part-supply.use-case.interface';
 import { IUpdateStockUseCase } from '@application/ports/input/part-supply/update-stock.use-case.interface';
 import { PartSupplyCategory } from '@domain/enums/part-supply-category.enum';
 import { Unit } from '@domain/enums/unit.enum';
@@ -20,6 +21,7 @@ describe('PartSupplyController', () => {
   let findByIdUseCase: jest.Mocked<IFindPartSupplyByIdUseCase>;
   let updateUseCase: jest.Mocked<IUpdatePartSupplyUseCase>;
   let updateStockUseCase: jest.Mocked<IUpdateStockUseCase>;
+  let deleteUseCase: jest.Mocked<IDeletePartSupplyUseCase>;
 
   const createRequestStub: CreatePartSupplyRequest = {
     name: 'Filtro de Óleo',
@@ -36,6 +38,7 @@ describe('PartSupplyController', () => {
     findByIdUseCase = { execute: jest.fn() };
     updateUseCase = { execute: jest.fn() };
     updateStockUseCase = { execute: jest.fn() };
+    deleteUseCase = { execute: jest.fn() };
 
     controller = new PartSupplyController(
       createUseCase,
@@ -43,6 +46,7 @@ describe('PartSupplyController', () => {
       findByIdUseCase,
       updateUseCase,
       updateStockUseCase,
+      deleteUseCase,
     );
   });
 
@@ -182,6 +186,15 @@ describe('PartSupplyController', () => {
         partSupplyId: updated.id,
         ...request,
       });
+    });
+  });
+
+  describe('delete', () => {
+    it('should run the use case and return nothing', async () => {
+      deleteUseCase.execute.mockResolvedValue(undefined);
+
+      await expect(controller.delete('part-1')).resolves.toBeUndefined();
+      expect(deleteUseCase.execute).toHaveBeenCalledWith('part-1');
     });
   });
 });
