@@ -10,13 +10,13 @@ export class UpdateStockDto {
     example: StockMovementType.ENTRY,
   })
   @IsEnum(StockMovementType, {
-    message: 'Tipo de movimentação inválido. Use ENTRY, EXIT ou ADJUSTMENT.',
+    message: 'Tipo de movimentação inválido. Use ENTRY, EXIT ou ADJUSTMENT',
   })
   type!: StockMovementType;
 
   @ApiProperty({ description: 'Quantidade de Peças ou Insumos movimentados', example: 5 })
-  @IsInt({ message: 'A quantidade deve ser um número inteiro.' })
-  @IsPositive({ message: 'A quantidade deve ser positiva.' })
+  @IsInt({ message: 'A quantidade deve ser um número inteiro' })
+  @IsPositive({ message: 'A quantidade deve ser positiva' })
   quantity!: number;
 
   @ApiPropertyOptional({
@@ -24,7 +24,7 @@ export class UpdateStockDto {
     example: 'Reposição de Estoque recebida do fornecedor',
   })
   @IsOptional()
-  @IsString({ message: 'O motivo deve ser um texto.' })
+  @IsString({ message: 'O motivo deve ser um texto' })
   reason?: string;
 
   @ApiPropertyOptional({
@@ -32,6 +32,6 @@ export class UpdateStockDto {
     example: '550e8400-e29b-41d4-a716-446655440000',
   })
   @IsOptional()
-  @IsUUID('4', { message: 'O ID da Ordem de Serviço deve ser um UUID válido.' })
+  @IsUUID('4', { message: 'O ID da Ordem de Serviço deve ser um UUID válido' })
   workOrderId?: string;
 }

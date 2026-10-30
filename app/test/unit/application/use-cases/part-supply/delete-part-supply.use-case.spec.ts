@@ -65,7 +65,7 @@ describe('DeletePartSupplyUseCase', () => {
 
     await expect(useCase.execute('part-1')).rejects.toThrow(
       new ResourceConflictException(
-        'Peça ou insumo não pode ser excluído pois está vinculado a ordens de serviço ou orçamentos.',
+        'Peça ou insumo não pode ser excluído pois está vinculado a ordens de serviço ou orçamentos',
       ),
     );
     expect(partSupplyRepository.delete).not.toHaveBeenCalled();

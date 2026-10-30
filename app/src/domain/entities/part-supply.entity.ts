@@ -127,7 +127,7 @@ export class PartSupply {
 
   applyStockMovement(type: StockMovementType, quantity: number): void {
     if (!Number.isInteger(quantity) || quantity <= 0) {
-      throw new DomainValidationException('Quantidade deve ser um inteiro positivo.');
+      throw new DomainValidationException('Quantidade deve ser um inteiro positivo');
     }
 
     if (type === StockMovementType.ENTRY) {
@@ -135,13 +135,13 @@ export class PartSupply {
     } else if (type === StockMovementType.EXIT) {
       if (quantity > this.stock) {
         throw new BusinessRuleViolationException(
-          `Estoque insuficiente. Solicitado: ${quantity}, disponível: ${this.stock}.`,
+          `Estoque insuficiente. Solicitado: ${quantity}, disponível: ${this.stock}`,
         );
       }
 
       if (this.stock - quantity < this.reservedStock) {
         throw new BusinessRuleViolationException(
-          `Não é possível reduzir o estoque abaixo do estoque reservado. Estoque atual: ${this.stock}, Reservado: ${this.reservedStock}, Redução solicitada: ${quantity}.`,
+          `Não é possível reduzir o estoque abaixo do estoque reservado. Estoque atual: ${this.stock}, Reservado: ${this.reservedStock}, Redução solicitada: ${quantity}`,
         );
       }
 
@@ -149,7 +149,7 @@ export class PartSupply {
     } else {
       if (quantity < this.reservedStock) {
         throw new BusinessRuleViolationException(
-          `Não é possível ajustar o estoque abaixo do estoque reservado. Reservado: ${this.reservedStock}, Ajuste solicitado: ${quantity}.`,
+          `Não é possível ajustar o estoque abaixo do estoque reservado. Reservado: ${this.reservedStock}, Ajuste solicitado: ${quantity}`,
         );
       }
 
@@ -297,14 +297,14 @@ export class PartSupply {
     today.setHours(0, 0, 0, 0);
 
     if (expiresAt < today) {
-      throw new DomainValidationException('Data de validade não pode ser anterior a hoje.');
+      throw new DomainValidationException('Data de validade não pode ser anterior a hoje');
     }
   }
 
   ensureCanDelete(): void {
     if (this.reservedStock > 0) {
       throw new BusinessRuleViolationException(
-        'Não é possível excluir uma peça/insumo com estoque reservado.',
+        'Não é possível excluir uma peça/insumo com estoque reservado',
       );
     }
   }
@@ -328,7 +328,7 @@ export class PartSupply {
   consumeReserved(quantity: number): void {
     if (quantity > this.reservedStock) {
       throw new BusinessRuleViolationException(
-        `Reserva insuficiente para "${this.name}". Reservado: ${this.reservedStock}, Solicitado: ${quantity}.`,
+        `Reserva insuficiente para "${this.name}". Reservado: ${this.reservedStock}, Solicitado: ${quantity}`,
       );
     }
 

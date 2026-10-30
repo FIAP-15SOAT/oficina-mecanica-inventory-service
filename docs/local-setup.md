@@ -9,6 +9,7 @@ Dois modos: tudo em containers (Quick Start do [README](../README.md)) ou a API 
 - [Chave pública do token de funcionário](#chave-pública-do-token-de-funcionário)
 - [Tudo em containers](#tudo-em-containers)
 - [API na máquina](#api-na-máquina)
+- [Dados iniciais (seed)](#dados-iniciais-seed)
 
 ## Portas locais por contexto
 
@@ -38,6 +39,7 @@ Veja `app/.env.example`. As principais:
 | `MESSAGING_TOPIC_ARN` | `arn:aws:sns:us-east-1:000000000000:oficina-events.fifo` | Tópico de publicação |
 | `CACHE_URL` | `redis://:valkey@localhost:6382` | Valkey (`rediss://` no cluster) |
 | `CACHE_TTL_SECONDS` | `43200` | TTL das entradas |
+| `QUOTE_ITEMS_SERVICE_URL` | `http://localhost:3000` (no compose é fixo em `http://host.docker.internal:3000`) | Dono dos orçamentos (Work Order), consultado antes de excluir serviço ou peça; obrigatória, a API não sobe sem ela |
 | `LOG_LEVEL` | `info` | `fatal` a `trace` ou `silent` |
 
 ## Chave pública do token de funcionário
@@ -100,3 +102,19 @@ npm run start:dev
 ```
 
 O `.env` precisa ter `STAFF_JWT_PUBLIC_KEY` (seção anterior).
+
+A exclusão de serviço ou peça consulta o Work Order. Com a API na máquina, o `.env` usa `QUOTE_ITEMS_SERVICE_URL=http://localhost:3000`; o compose já aponta o container para `http://host.docker.internal:3000`, o Work Order rodando na máquina, sem depender do `.env`. Sem o Work Order no ar, `DELETE` responde 503 e nada é excluído.
+
+## Dados iniciais (seed)
+
+O banco sobe vazio. Para carregar 25 serviços e 8 peças com os ids canônicos:
+
+```bash
+# A partir de app/, com o PostgreSQL no ar e DATABASE_URL no .env
+npm run db:setup
+
+# Só o seed, com o schema já aplicado
+npm run prisma:seed
+```
+
+O seed é idempotente: serviço existente é atualizado e peça existente nunca é alterada, para não sobrescrever o saldo.

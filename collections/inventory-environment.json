@@ -7,6 +7,12 @@
       "value": "http://localhost:3003",
       "type": "default",
       "enabled": true
+    },
+    {
+      "key": "authToken",
+      "value": "",
+      "type": "secret",
+      "enabled": true
     }
   ],
   "_postman_variable_scope": "environment"

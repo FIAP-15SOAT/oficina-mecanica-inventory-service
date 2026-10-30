@@ -50,7 +50,7 @@ describe('ReserveStockHandler', () => {
 
   it('fails without workOrderId in the envelope', async () => {
     await expect(handler.handle(envelope(null))).rejects.toThrow(
-      'Comando de reserva sem o id da ordem de serviço.',
+      'Comando de reserva sem o id da ordem de serviço',
     );
 
     expect(useCase.execute).not.toHaveBeenCalled();

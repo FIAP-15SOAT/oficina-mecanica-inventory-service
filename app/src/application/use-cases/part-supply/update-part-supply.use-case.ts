@@ -24,7 +24,7 @@ export class UpdatePartSupplyUseCase implements IUpdatePartSupplyUseCase {
       const withSameSku = await this.partSupplyRepository.findBySku(input.sku);
 
       if (withSameSku) {
-        throw new ResourceConflictException(`SKU '${input.sku}' já está em uso.`);
+        throw new ResourceConflictException(`SKU '${input.sku}' já está em uso`);
       }
     }
 

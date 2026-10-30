@@ -77,11 +77,11 @@ export class StockMovement {
     const trimmed = partSupplyId?.trim();
 
     if (!trimmed) {
-      throw new DomainValidationException('ID da peça/insumo é obrigatório.');
+      throw new DomainValidationException('ID da peça/insumo é obrigatório');
     }
 
     if (!isUuid(trimmed)) {
-      throw new DomainValidationException(`ID da peça/insumo inválido.`);
+      throw new DomainValidationException(`ID da peça/insumo inválido`);
     }
   }
 
@@ -89,13 +89,13 @@ export class StockMovement {
     const trimmed = workOrderId?.trim();
 
     if (trimmed && !isUuid(trimmed)) {
-      throw new DomainValidationException('ID da ordem de serviço inválido.');
+      throw new DomainValidationException('ID da ordem de serviço inválido');
     }
   }
 
   private static validateQuantity(quantity: number): void {
     if (!Number.isInteger(quantity) || quantity <= 0) {
-      throw new DomainValidationException('Quantidade deve ser um inteiro positivo.');
+      throw new DomainValidationException('Quantidade deve ser um inteiro positivo');
     }
   }
 }

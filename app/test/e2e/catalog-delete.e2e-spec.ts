@@ -271,7 +271,7 @@ describe('Catalog delete (E2E)', () => {
       const res = await deletePartSupply(id).expect(409);
 
       expect(res.body.message).toBe(
-        'Peça ou insumo não pode ser excluído pois possui movimentações de estoque ou reservas.',
+        'Peça ou insumo não pode ser excluído pois possui movimentações de estoque ou reservas',
       );
       expect(await ctx.prisma.partSupply.count({ where: { id } })).toBe(1);
     });

@@ -334,7 +334,7 @@ describe('PrismaPartSupplyRepository', () => {
 
       await expect(repository.delete('part-1')).rejects.toThrow(
         new ResourceConflictException(
-          'Peça ou insumo não pode ser excluído pois possui movimentações de estoque ou reservas.',
+          'Peça ou insumo não pode ser excluído pois possui movimentações de estoque ou reservas',
         ),
       );
     });

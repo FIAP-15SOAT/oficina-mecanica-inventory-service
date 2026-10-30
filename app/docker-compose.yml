@@ -60,8 +60,8 @@ services:
       MESSAGING_TOPIC_ARN: arn:aws:sns:us-east-1:000000000000:oficina-events.fifo
       CACHE_URL: redis://:valkey@valkey:6379
       CACHE_TTL_SECONDS: 43200
-      # work-order until C-23, then Billing; host.docker.internal reaches the work-order running on the host.
-      QUOTE_ITEMS_SERVICE_URL: ${QUOTE_ITEMS_SERVICE_URL:-http://host.docker.internal:3000}
+      # Owner of the quotes (currently the work-order); host.docker.internal reaches the one running on the host.
+      QUOTE_ITEMS_SERVICE_URL: http://host.docker.internal:3000
       TZ: America/Sao_Paulo
     extra_hosts:
       - "host.docker.internal:host-gateway"

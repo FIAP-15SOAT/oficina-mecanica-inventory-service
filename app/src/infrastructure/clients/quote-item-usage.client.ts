@@ -5,7 +5,7 @@ import { IInternalHttpClient } from '@application/ports/output/internal-http-cli
 import { IQuoteItemUsageClient } from '@application/ports/output/quote-item-usage-client.interface';
 import { ServiceIntegrationException } from '@infrastructure/exceptions/service-integration.exception';
 
-const MALFORMED_MESSAGE = 'Serviço de destino indisponível.';
+const MALFORMED_MESSAGE = 'Serviço de destino indisponível';
 
 @Injectable()
 export class QuoteItemUsageClient implements IQuoteItemUsageClient {

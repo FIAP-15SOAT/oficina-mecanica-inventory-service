@@ -7,7 +7,7 @@ Quatro workflows do GitHub Actions em `.github/workflows/`, um por responsabilid
 | Workflow | Gatilho | Jobs |
 | --- | --- | --- |
 | CI | push em `feature/**` e `fix/**` | `Lint`, `Unit Tests`, `E2E Tests`, `Build`, `DB Validation` e `Open Pull Request` |
-| CD | push na `main` e `workflow_dispatch` | `Build and Push App Image`, `Prepare Deployment Configuration`, `DB Migrate` e `App Deploy` |
+| CD | push na `main` e `workflow_dispatch` | `Build and Push App Image`, `Prepare Deployment Configuration`, `DB Migrate & Seed` e `App Deploy` |
 | SAST | pull request para a `main` e push na `main` | `SAST` |
 | DAST | pull request para a `main` e `workflow_dispatch` | `OWASP ZAP API Scan` |
 
@@ -23,7 +23,7 @@ Quatro workflows do GitHub Actions em `.github/workflows/`, um por responsabilid
 
 1. `Build and Push App Image`: constrói a imagem e a publica em `ecr-oficina-mecanica-inventory` com a tag do SHA. No `workflow_dispatch` com `image_tag`, só confere que a tag já existe no ECR (rollback manual, sem build).
 2. `Prepare Deployment Configuration`: confere que as variables batem com os manifests, valida `STAFF_JWT_PUBLIC_KEY` e `STAFF_JWT_KEY_ID`, descobre no RDS e no Secrets Manager a credencial do banco e monta `DATABASE_URL` em `database-credentials` ([ADR 0004](adr/0004-materializacao-da-credencial-do-banco-no-cd.md)), monta `CACHE_URL` (`rediss://`) em `cache-credentials`, aplica `jwt-public-keys` e o ConfigMap (com `MESSAGING_TOPIC_ARN` renderizado com a conta da AWS).
-3. `DB Migrate`: roda o Job `db-migrate-<run>` com `prisma migrate deploy` e espera o resultado. Pulado no rollback por `image_tag`.
+3. `DB Migrate & Seed`: roda o Job `db-migrate-<run>`, que executa `prisma migrate deploy` e depois `prisma db seed` (os dois com `set -e`, então a falha de qualquer um falha o Job), e espera o resultado. O seed é idempotente: a peça (chave SKU) só é criada, para nunca sobrescrever saldo movimentado, e o serviço (chave nome) tem descrição, preço e tempo atualizados. Pulado no rollback por `image_tag`.
 4. `App Deploy`: aplica Service, HPA e Deployment (com a imagem de tag imutável), espera o rollout e faz o smoke `GET /health/inventory` pelo API Gateway (pulado com aviso se a API do gateway ainda não existe). Se o rollout ou o smoke falham, executa `kubectl rollout undo` e falha o job.
 
 O deploy só acontece com `vars.ENABLE_DEPLOY == 'true'` ou por `workflow_dispatch`, na `main`.
@@ -46,4 +46,4 @@ Os checks obrigatórios da `main` são `Lint`, `Unit Tests`, `E2E Tests`, `Build
 
 ## Fontes dos diagramas
 
-Os diagramas derivam dos diagramas de CI, CD, SAST e DAST do Work Order (`oficina_mecanica_grupo39/docs/diagrams/`), mantidos o layout e o estilo e adaptados ao Inventory: sem seed nem login, token de teste efêmero no DAST, SonarQube Scan v8.3.0, namespace `inventory`, `ecr-oficina-mecanica-inventory` e smoke em `/health/inventory`. Os PNGs em `diagrams/` carregam o XML do draw.io embutido: abra-os no draw.io (File > Open) para editar. Os fontes estão em `diagrams/src/`.
+Os diagramas derivam dos diagramas de CI, CD, SAST e DAST do Work Order (`oficina_mecanica_grupo39/docs/diagrams/`), mantidos o layout e o estilo e adaptados ao Inventory: sem login, token de teste efêmero no DAST, SonarQube Scan v8.3.0, namespace `inventory`, `ecr-oficina-mecanica-inventory` e smoke em `/health/inventory`. Os PNGs em `diagrams/` carregam o XML do draw.io embutido: abra-os no draw.io (File > Open) para editar. Os fontes estão em `diagrams/src/`.

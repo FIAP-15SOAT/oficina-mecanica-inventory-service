@@ -10,12 +10,12 @@ export class FilterPartsSuppliesDto {
     example: 'Filtro de Óleo',
   })
   @IsOptional()
-  @IsString({ message: 'O nome deve ser um texto.' })
+  @IsString({ message: 'O nome deve ser um texto' })
   name?: string;
 
   @ApiPropertyOptional({ description: 'Filtrar por SKU da Peça ou Insumo', example: 'FO-001' })
   @IsOptional()
-  @IsString({ message: 'O SKU deve ser um texto.' })
+  @IsString({ message: 'O SKU deve ser um texto' })
   sku?: string;
 
   @ApiPropertyOptional({
@@ -24,14 +24,14 @@ export class FilterPartsSuppliesDto {
   })
   @IsOptional()
   @IsEnum(PartSupplyCategory, {
-    message: 'Categoria inválida. Use PART (Peça) ou SUPPLY (Insumo).',
+    message: 'Categoria inválida. Use PART (Peça) ou SUPPLY (Insumo)',
   })
   category?: PartSupplyCategory;
 
   @ApiPropertyOptional({ description: 'Filtrar apenas itens com estoque abaixo do mínimo' })
   @IsOptional()
   @Transform(({ value }) => value === 'true' || value === true)
-  @IsBoolean({ message: 'O filtro de estoque baixo deve ser true ou false.' })
+  @IsBoolean({ message: 'O filtro de estoque baixo deve ser true ou false' })
   lowStock?: boolean;
 }
 

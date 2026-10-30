@@ -126,7 +126,7 @@ export class PrismaPartSupplyRepository implements IPartSupplyRepository {
     } catch (error) {
       if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
         throw new ConcurrencyException(
-          'Peça/insumo foi modificado por outra operação. Tente novamente.',
+          'Peça/insumo foi modificado por outra operação. Tente novamente',
         );
       }
       throw error;
@@ -145,7 +145,7 @@ export class PrismaPartSupplyRepository implements IPartSupplyRepository {
         // ON DELETE RESTRICT from stock_movements and stock_reservations.
         if (error.code === 'P2003') {
           throw new ResourceConflictException(
-            'Peça ou insumo não pode ser excluído pois possui movimentações de estoque ou reservas.',
+            'Peça ou insumo não pode ser excluído pois possui movimentações de estoque ou reservas',
           );
         }
       }

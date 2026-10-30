@@ -21,7 +21,7 @@ data:
   # SNS does not resolve an ARN by name: the CD renders it with the account from `aws sts get-caller-identity`.
   MESSAGING_TOPIC_ARN: "${MESSAGING_TOPIC_ARN}"
   CACHE_TTL_SECONDS: "43200"
-  # Owner of the quote items: work-order until C-23, then Billing.
+  # Owner of the quote items (currently the work-order).
   QUOTE_ITEMS_SERVICE_URL: "http://work-order-service.work-order.svc.cluster.local:3000"
   OTEL_EXPORTER_OTLP_ENDPOINT: "${OTEL_EXPORTER_OTLP_ENDPOINT}"
   OTEL_LOGS_EXPORTER: "none"

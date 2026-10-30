@@ -225,7 +225,7 @@ describe('ReserveStockUseCase', () => {
     const part = createMockPartSupply({ stock: 5, reservedStock: 0 });
     givenParts(part);
     repos.partSupply.update.mockRejectedValue(
-      new ConcurrencyException('Peça/insumo foi modificado por outra operação. Tente novamente.'),
+      new ConcurrencyException('Peça/insumo foi modificado por outra operação. Tente novamente'),
     );
 
     await expect(

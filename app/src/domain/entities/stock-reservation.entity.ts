@@ -59,11 +59,11 @@ export class StockReservation {
     const trimmed = partSupplyId?.trim();
 
     if (!trimmed) {
-      throw new DomainValidationException('ID da peça/insumo é obrigatório.');
+      throw new DomainValidationException('ID da peça/insumo é obrigatório');
     }
 
     if (!isUuid(trimmed)) {
-      throw new DomainValidationException(`ID da peça/insumo deve ser um UUID válido.`);
+      throw new DomainValidationException(`ID da peça/insumo deve ser um UUID válido`);
     }
   }
 
@@ -71,17 +71,17 @@ export class StockReservation {
     const trimmed = workOrderId?.trim();
 
     if (!trimmed) {
-      throw new DomainValidationException('ID da ordem de serviço é obrigatório.');
+      throw new DomainValidationException('ID da ordem de serviço é obrigatório');
     }
 
     if (!isUuid(trimmed)) {
-      throw new DomainValidationException(`ID da ordem de serviço deve ser um UUID válido.`);
+      throw new DomainValidationException(`ID da ordem de serviço deve ser um UUID válido`);
     }
   }
 
   private static validateQuantity(quantity: number): void {
     if (!Number.isInteger(quantity) || quantity <= 0) {
-      throw new DomainValidationException('Quantidade deve ser um inteiro positivo.');
+      throw new DomainValidationException('Quantidade deve ser um inteiro positivo');
     }
   }
 }

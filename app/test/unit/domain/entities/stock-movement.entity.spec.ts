@@ -53,13 +53,13 @@ describe('StockMovement Entity', () => {
 
     it('should throw when partSupplyId is not a valid UUID', () => {
       expect(() => StockMovement.create({ ...validProps, partSupplyId: 'invalid-uuid' })).toThrow(
-        'ID da peça/insumo inválido.',
+        'ID da peça/insumo inválido',
       );
     });
 
     it('should throw when workOrderId is not a valid UUID', () => {
       expect(() => StockMovement.create({ ...validProps, workOrderId: 'invalid-uuid' })).toThrow(
-        'ID da ordem de serviço inválido.',
+        'ID da ordem de serviço inválido',
       );
     });
 

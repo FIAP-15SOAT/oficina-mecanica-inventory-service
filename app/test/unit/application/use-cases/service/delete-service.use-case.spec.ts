@@ -55,7 +55,7 @@ describe('DeleteServiceUseCase', () => {
 
     await expect(useCase.execute('svc-1')).rejects.toThrow(
       new ResourceConflictException(
-        'Serviço não pode ser excluído pois está vinculado a ordens de serviço ou orçamentos.',
+        'Serviço não pode ser excluído pois está vinculado a ordens de serviço ou orçamentos',
       ),
     );
     expect(serviceRepository.delete).not.toHaveBeenCalled();

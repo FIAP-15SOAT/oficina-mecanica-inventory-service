@@ -7,8 +7,9 @@ left to right direction
 
 actor "Funcionário / outros serviços\n[Pessoa / Sistema]" as client
 cloud "API Gateway / NLB\n[Sistema externo]" as gateway
-database "PostgreSQL 18\n[Banco: tabela outbox]" as pg
+database "PostgreSQL 18\n[Banco: catálogo, estoque e outbox]" as pg
 database "Valkey 9.1\n[Cache]" as valkey
+node "Work Order\n[Serviço dono dos orçamentos]" as workorder
 queue "SNS FIFO\noficina-events.fifo\n[Tópico]" as sns
 queue "SQS FIFO\ninventory.fifo + DLQ\n[Fila]" as sqs
 
@@ -16,26 +17,30 @@ rectangle "Inventory Service [Container: NestJS 12]" {
   component "Borda HTTP\n[Controllers, Swagger, filtros]" as http
   component "Guard de autenticação\n[AuthenticationGuard + JwtStrategy, RS256]" as guard
   component "Health\n[HealthController, ReadinessState]" as health
-  component "Clean Controllers e Use Cases\n[application + interface-adapters, ainda vazio]" as usecases
+  component "Clean Controllers e Use Cases\n[catálogo, estoque, reserva e baixa]" as usecases
   component "Catálogo de mensagens\n[domain/messaging]" as catalog
   component "Unit of Work e Outbox Repository\n[Prisma]" as uow
   component "Outbox Relay\n[OutboxRelayService, 500 ms, advisory lock]" as relay
   component "Consumidor SQS\n[SqsConsumerService + MessageHandlerRegistry]" as consumer
   component "Adaptador de cache\n[ICache + ValkeyCacheAdapter]" as cache
-  component "Cliente HTTP interno\n[IInternalHttpClient, /internal]" as internal
+  component "Cliente HTTP interno\n[consulta de uso em orçamentos]" as internal
+component "Rotas internas\n[/internal/services e /internal/parts-supplies]" as internalroutes
   component "Logging e telemetria\n[pino, OpenTelemetry]" as obs
 }
 
-client --> gateway : HTTPS
-gateway --> http : HTTP + Bearer JWT
+client --> http : HTTP + Bearer JWT
+gateway --> http : só health e docs
 http --> guard
 http --> health
 http --> usecases
+http --> internalroutes
+internalroutes --> usecases
 health --> pg : verifica o banco
 usecases --> catalog
 usecases --> uow
 usecases --> cache
 usecases --> internal
+internal --> workorder : GET /internal/.../quote-items
 uow --> pg : SQL (mesma transação)
 relay --> pg : lê e apaga lotes
 relay --> sns : Publish (MessageGroupId)

@@ -18,7 +18,7 @@ export class CreatePartSupplyUseCase implements ICreatePartSupplyUseCase {
     const existing = await this.partSupplyRepository.findBySku(input.sku);
 
     if (existing) {
-      throw new ResourceConflictException(`SKU '${input.sku}' já está em uso.`);
+      throw new ResourceConflictException(`SKU '${input.sku}' já está em uso`);
     }
 
     const created = await this.partSupplyRepository.create(PartSupply.create(input));

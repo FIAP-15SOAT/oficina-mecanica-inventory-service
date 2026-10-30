@@ -37,7 +37,7 @@ describe('ConsumeReservedStockHandler', () => {
 
   it.each([null, ''])('fails without workOrderId in the envelope (%p)', async (missing) => {
     await expect(handler.handle(envelope(missing))).rejects.toThrow(
-      'Comando de baixa sem o id da ordem de serviço.',
+      'Comando de baixa sem o id da ordem de serviço',
     );
 
     expect(useCase.execute).not.toHaveBeenCalled();

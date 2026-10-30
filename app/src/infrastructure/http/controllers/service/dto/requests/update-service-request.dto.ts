@@ -19,7 +19,7 @@ export class UpdateServiceRequestDto {
     example: 'Troca de óleo premium',
     description: 'Nome do serviço (mín. 3 e máx. 150 caracteres)',
   })
-  @IsString({ message: 'O nome deve ser um texto.' })
+  @IsString({ message: 'O nome deve ser um texto' })
   @IsNotEmpty({ message: 'O nome é obrigatório' })
   @MinLength(MIN_NAME_LENGTH, {
     message: `O nome deve ter no mínimo ${MIN_NAME_LENGTH} caracteres`,

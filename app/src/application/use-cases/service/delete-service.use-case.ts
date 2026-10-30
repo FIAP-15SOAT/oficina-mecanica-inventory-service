@@ -22,7 +22,7 @@ export class DeleteServiceUseCase implements IDeleteServiceUseCase {
 
     if (await this.quoteItemUsage.isServiceInUse(id)) {
       throw new ResourceConflictException(
-        'Serviço não pode ser excluído pois está vinculado a ordens de serviço ou orçamentos.',
+        'Serviço não pode ser excluído pois está vinculado a ordens de serviço ou orçamentos',
       );
     }
 

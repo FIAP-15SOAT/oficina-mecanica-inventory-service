@@ -24,7 +24,7 @@ export class DeletePartSupplyUseCase implements IDeletePartSupplyUseCase {
 
     if (await this.quoteItemUsage.isPartSupplyInUse(id)) {
       throw new ResourceConflictException(
-        'Peça ou insumo não pode ser excluído pois está vinculado a ordens de serviço ou orçamentos.',
+        'Peça ou insumo não pode ser excluído pois está vinculado a ordens de serviço ou orçamentos',
       );
     }
 
