@@ -32,6 +32,10 @@ const createMockDelegate = (): MockDelegate => ({
 
 export type MockPrismaService = {
   outboxMessage: MockDelegate;
+  partSupply: MockDelegate;
+  service: MockDelegate;
+  stockMovement: MockDelegate;
+  stockReservation: MockDelegate;
   $connect: jest.Mock;
   $disconnect: jest.Mock;
   $transaction: jest.Mock;
@@ -42,6 +46,10 @@ export type MockPrismaService = {
 export function createMockPrismaClient(): MockPrismaService {
   return {
     outboxMessage: createMockDelegate(),
+    partSupply: { ...createMockDelegate(), fields: { minStock: 'minStockReference' } },
+    service: createMockDelegate(),
+    stockMovement: createMockDelegate(),
+    stockReservation: createMockDelegate(),
     $connect: jest.fn(),
     $disconnect: jest.fn(),
     $transaction: jest
