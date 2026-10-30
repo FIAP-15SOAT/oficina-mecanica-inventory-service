@@ -32,6 +32,8 @@ A reserva é **tudo ou nada** e **idempotente por ordem de serviço**, numa úni
 
 `inventory.stock.consume` baixa, para cada reserva da ordem de serviço, o saldo e o reservado da peça, grava uma movimentação `EXIT` com o motivo `Saída por Ordem de Serviço <workOrderId>` e apaga as reservas, tudo numa transação. A idempotência vem da própria reserva: sem reservas, a baixa já foi feita (ou nunca houve reserva) e a repetição não muda nada. A baixa não publica evento.
 
+Nota operacional: não reprocesse da `inventory-dlq.fifo` um `inventory.stock.reserve` antigo de uma ordem de serviço que já foi baixada, porque ele reservaria de novo e ainda não há liberação de reserva.
+
 ## Eventos publicados
 
 | Tipo | Payload | Quando |

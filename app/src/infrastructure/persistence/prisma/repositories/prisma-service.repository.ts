@@ -44,14 +44,6 @@ export class PrismaServiceRepository implements IServiceRepository {
     return serviceRecord ? ServiceMapper.toDomain(serviceRecord) : null;
   }
 
-  async findByIds(ids: string[]): Promise<Service[]> {
-    const records = await this.prisma.service.findMany({
-      where: { id: { in: ids } },
-    });
-
-    return records.map((r) => ServiceMapper.toDomain(r));
-  }
-
   async findByName(name: string): Promise<Service | null> {
     const serviceRecord = await this.prisma.service.findFirst({ where: { name } });
 
@@ -86,17 +78,30 @@ export class PrismaServiceRepository implements IServiceRepository {
   }
 
   async update(service: Service): Promise<Service> {
-    const updatedService = await this.prisma.service.update({
-      where: { id: service.id },
-      data: {
-        name: service.name,
-        description: service.description,
-        basePrice: service.basePrice,
-        estimatedTimeMin: service.estimatedTimeMin,
-      },
-    });
+    try {
+      const updatedService = await this.prisma.service.update({
+        where: { id: service.id },
+        data: {
+          name: service.name,
+          description: service.description,
+          basePrice: service.basePrice,
+          estimatedTimeMin: service.estimatedTimeMin,
+        },
+      });
 
-    return ServiceMapper.toDomain(updatedService);
+      return ServiceMapper.toDomain(updatedService);
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        // Concurrent request took the name, or removed the service, after the checks.
+        if (error.code === 'P2002') {
+          throw new ResourceConflictException('Serviço já cadastrado');
+        }
+        if (error.code === 'P2025') {
+          throw new ResourceNotFoundException('Serviço', service.id);
+        }
+      }
+      throw error;
+    }
   }
 
   async delete(id: string): Promise<void> {

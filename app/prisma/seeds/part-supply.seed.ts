@@ -110,34 +110,26 @@ const partSupplies: PartSupplySeed[] = [
   },
 ];
 
-export async function seedPartSupplies(prisma: PrismaClient): Promise<Record<string, string>> {
+export async function seedPartSupplies(prisma: PrismaClient): Promise<void> {
   console.log('🌱 Seeding part supplies...');
 
-  const ids: Record<string, string> = {};
+  // Skips any conflict (id, sku): a re-seed must never overwrite stock moved by reservations.
+  const { count } = await prisma.partSupply.createMany({
+    data: partSupplies.map((part) => ({
+      id: SEED_IDS.partSupplies[part.sku],
+      name: part.name,
+      description: part.description,
+      sku: part.sku,
+      partNumber: part.partNumber,
+      category: part.category,
+      unit: part.unit,
+      costPrice: part.costPrice,
+      salePrice: part.salePrice,
+      stock: part.stock,
+      minStock: part.minStock,
+    })),
+    skipDuplicates: true,
+  });
 
-  for (const part of partSupplies) {
-    const record = await prisma.partSupply.upsert({
-      where: { id: SEED_IDS.partSupplies[part.sku] },
-      // Empty on purpose: a re-seed must never overwrite stock moved by reservations.
-      update: {},
-      create: {
-        id: SEED_IDS.partSupplies[part.sku],
-        name: part.name,
-        description: part.description,
-        sku: part.sku,
-        partNumber: part.partNumber,
-        category: part.category,
-        unit: part.unit,
-        costPrice: part.costPrice,
-        salePrice: part.salePrice,
-        stock: part.stock,
-        minStock: part.minStock,
-      },
-    });
-
-    ids[part.sku] = record.id;
-    console.log(`  ✓ Part: ${part.name} (${part.sku})`);
-  }
-
-  return ids;
+  console.log(`✅ ${count} of ${partSupplies.length} part supplies created`);
 }

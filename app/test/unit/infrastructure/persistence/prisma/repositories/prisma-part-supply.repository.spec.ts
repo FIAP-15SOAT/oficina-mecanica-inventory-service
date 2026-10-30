@@ -292,6 +292,31 @@ describe('PrismaPartSupplyRepository', () => {
       await expect(repository.update(entity)).rejects.toThrow(ConcurrencyException);
     });
 
+    it('should throw ResourceConflictException when a concurrent request took the SKU (P2002)', async () => {
+      const entity = createMockPartSupply({ version: 1 });
+      prisma.partSupply.update.mockRejectedValue(
+        new Prisma.PrismaClientKnownRequestError('Duplicate SKU', {
+          code: 'P2002',
+          clientVersion: '5.0.0',
+        }),
+      );
+
+      await expect(repository.update(entity)).rejects.toThrow(
+        new ResourceConflictException('Peça ou insumo já cadastrado'),
+      );
+    });
+
+    it('should rethrow other Prisma errors from update', async () => {
+      const entity = createMockPartSupply({ version: 1 });
+      const error = new Prisma.PrismaClientKnownRequestError('FK', {
+        code: 'P2003',
+        clientVersion: '5.0.0',
+      });
+      prisma.partSupply.update.mockRejectedValue(error);
+
+      await expect(repository.update(entity)).rejects.toBe(error);
+    });
+
     it('should rethrow unexpected errors from update', async () => {
       const entity = createMockPartSupply({ version: 1 });
       const unexpectedError = new Error('Database connection lost');

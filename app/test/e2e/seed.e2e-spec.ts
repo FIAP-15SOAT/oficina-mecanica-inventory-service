@@ -96,4 +96,45 @@ describe('Catalog seed (E2E)', () => {
     expect(await prisma.partSupply.findUnique({ where: { sku: 'CHANGED-SKU' } })).not.toBeNull();
     expect(await prisma.partSupply.count()).toBe(8);
   });
+
+  it('does not fail or overwrite when a seeded item was deleted and another took its name or SKU', async () => {
+    const name = Object.keys(SEED_IDS.services)[2];
+    const sku = 'VELA-IG-001';
+    await prisma.service.delete({ where: { name } });
+    const replacementService = await prisma.service.create({
+      data: { name, basePrice: 1, estimatedTimeMin: 5 },
+    });
+    await prisma.partSupply.delete({ where: { sku } });
+    const replacementPart = await prisma.partSupply.create({
+      data: { name: 'Replacement', sku, category: 'PART', costPrice: 1, salePrice: 2, stock: 3 },
+    });
+
+    run('npx prisma db seed');
+
+    const service = await prisma.service.findUniqueOrThrow({ where: { name } });
+    expect(service.id).toBe(replacementService.id);
+    expect(service.id).not.toBe(SEED_IDS.services[name]);
+    expect(Number(service.basePrice)).toBe(1);
+    expect(await prisma.service.count()).toBe(25);
+    const part = await prisma.partSupply.findUniqueOrThrow({ where: { sku } });
+    expect(part.id).toBe(replacementPart.id);
+    expect(part.name).toBe('Replacement');
+    expect(await prisma.partSupply.count()).toBe(8);
+  });
+
+  it('recreates a seeded item deleted by the admin when its name and SKU are free', async () => {
+    const name = Object.keys(SEED_IDS.services)[3];
+    const sku = 'BAT-60AH-001';
+    await prisma.service.delete({ where: { name } });
+    await prisma.partSupply.delete({ where: { sku } });
+
+    run('npx prisma db seed');
+
+    expect((await prisma.service.findUniqueOrThrow({ where: { name } })).id).toBe(
+      SEED_IDS.services[name],
+    );
+    expect((await prisma.partSupply.findUniqueOrThrow({ where: { sku } })).id).toBe(
+      SEED_IDS.partSupplies[sku],
+    );
+  });
 });

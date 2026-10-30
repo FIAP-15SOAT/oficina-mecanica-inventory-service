@@ -163,29 +163,20 @@ const services: ServiceSeed[] = [
   },
 ];
 
-export async function seedServices(prisma: PrismaClient): Promise<Record<string, string>> {
+export async function seedServices(prisma: PrismaClient): Promise<void> {
   console.log('🌱 Seeding services...');
 
-  const ids: Record<string, string> = {};
+  // Skips any conflict (id, name): a re-seed must never overwrite or fail on edited rows.
+  const { count } = await prisma.service.createMany({
+    data: services.map((service) => ({
+      id: SEED_IDS.services[service.name],
+      name: service.name,
+      description: service.description,
+      basePrice: service.basePrice,
+      estimatedTimeMin: service.estimatedTimeMin,
+    })),
+    skipDuplicates: true,
+  });
 
-  for (const service of services) {
-    const result = await prisma.service.upsert({
-      where: { id: SEED_IDS.services[service.name] },
-      // Empty on purpose: a re-seed must never overwrite edits made after the first load.
-      update: {},
-      create: {
-        id: SEED_IDS.services[service.name],
-        name: service.name,
-        description: service.description,
-        basePrice: service.basePrice,
-        estimatedTimeMin: service.estimatedTimeMin,
-      },
-    });
-
-    ids[service.name] = result.id;
-    console.log(`  ✔ ${service.name} - R$ ${service.basePrice.toFixed(2)}`);
-  }
-
-  console.log(`✅ ${services.length} services seeded`);
-  return ids;
+  console.log(`✅ ${count} of ${services.length} services created`);
 }

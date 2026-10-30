@@ -37,8 +37,8 @@ Corpo de `POST` e `PUT`: `name` (3 a 150 caracteres), `description` (opcional, a
 
 | Método | Rota | Descrição | Papéis | Respostas |
 | --- | --- | --- | --- | --- |
-| POST | `/` | Cadastrar peça ou insumo | ADMIN | 201, 400, 409 (SKU repetido), 422 |
-| GET | `/` | Consultar estoque paginado (filtros `name`, `sku`, `category`, `lowStock`) | ADMIN, ATTENDANT, MECHANIC | 200 |
+| POST | `/` | Cadastrar peça ou insumo | ADMIN | 201, 400, 401, 403, 409 (SKU repetido), 422 |
+| GET | `/` | Consultar estoque paginado (filtros `name`, `sku`, `category`, `lowStock`) | ADMIN, ATTENDANT, MECHANIC | 200, 400 (filtro inválido), 401, 403 |
 | GET | `/:id` | Buscar por id (com cache) | ADMIN, ATTENDANT | 200, 400 (id não UUID), 404 |
 | PUT | `/:id` | Atualizar dados cadastrais (não altera saldo) | ADMIN | 200, 400, 404, 409 (SKU em uso), 422 |
 | PATCH | `/:id` | Movimentar estoque manualmente | ADMIN, ATTENDANT | 200, 400, 404, 409 |
@@ -62,7 +62,7 @@ Um conflito de versão concorrente na peça também responde **409**; repita a c
 
 ### Exclusão
 
-`DELETE` de serviço ou peça consulta o dono dos orçamentos (Work Order, `QUOTE_ITEMS_SERVICE_URL`) antes de excluir. Responde **409** se o item está em orçamento ou ordem de serviço; no caso da peça, também se há estoque reservado ou se há movimentações e reservas no histórico (a chave estrangeira é `RESTRICT`). Se o dono não responde (rede ou erro 5xx), responde **503** e nada é excluído. Um 4xx do dono (por exemplo 404, porque a rota ainda não existe) também vira **503** com a mensagem de indisponibilidade, e nada é excluído. Enquanto o Work Order não expõe `/internal/services/:id/quote-items` e `/internal/parts-supplies/:id/quote-items`, a exclusão não conclui.
+`DELETE` de serviço ou peça consulta o dono dos orçamentos (Work Order, `QUOTE_ITEMS_SERVICE_URL`) antes de excluir. Responde **409** se o item está em orçamento ou ordem de serviço; no caso da peça, também se há estoque reservado ou se há movimentações e reservas no histórico (a chave estrangeira é `RESTRICT`). Se não for possível confirmar o uso (dono fora do ar por rede ou erro 5xx, 4xx do dono, por exemplo 404 porque a rota ainda não existe, ou corpo fora do formato), responde **503** com a mensagem `Não foi possível confirmar se o item é usado em orçamentos; nada foi excluído, tente novamente mais tarde`, e nada é excluído. O status original do 4xx do dono só aparece no log técnico (`quote_item_usage.rejected`). Enquanto o Work Order não expõe `/internal/services/:id/quote-items` e `/internal/parts-supplies/:id/quote-items`, a exclusão não conclui.
 
 ## Movimentações e reservas
 

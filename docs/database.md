@@ -18,7 +18,7 @@ Enums: `StockMovementType` (`ENTRY`, `EXIT`, `ADJUSTMENT`), `Unit` (`UN`, `KG`, 
 
 - **CHECK `parts_supplies_stock_check`:** `stock >= reserved_stock AND reserved_stock >= 0`. O Prisma não declara CHECK, então ele vive em SQL bruto na migration `add_catalog_and_stock`. Mesmo um bug de aplicação não consegue reservar além do saldo.
 - **`work_order_id` sem chave estrangeira.** A ordem de serviço pertence ao Work Order: aqui ela é só um UUID, e o serviço nunca lê nem replica a entidade dele.
-- **Concorrência otimista:** `version` em `parts_supplies` sobe a cada atualização de saldo; uma escrita com versão velha falha e a API responde 409.
+- **Concorrência otimista:** `version` em `parts_supplies` sobe a cada atualização da peça, inclusive o `PUT` cadastral; uma escrita com versão velha falha e a API responde 409, então um `PUT` concorrente com uma reserva também pode responder 409.
 - **Exclusão protegida:** as FKs `RESTRICT` impedem excluir uma peça com movimentações ou reservas.
 
 ## Cache
@@ -27,4 +27,4 @@ Cache-aside por id no Valkey, só do dono: `inventory:service:<id>` e `inventory
 
 ## Seed
 
-`npm run prisma:seed` (`prisma db seed`) carrega 25 serviços e 8 peças com os ids canônicos compartilhados entre os serviços. É idempotente: serviço e peça só são criados quando o id canônico não existe (`upsert` por `id` com `update` vazio), e o que já existe nunca é alterado, para não sobrescrever saldo movimentado por reservas nem edições; renomear um serviço ou mudar um SKU não faz o seed falhar. `npm run db:setup` aplica as migrations, gera o client e roda o seed. No cluster, o Job `DB Migrate & Seed` roda `prisma migrate deploy` e depois `prisma db seed`.
+`npm run prisma:seed` (`prisma db seed`) carrega 25 serviços e 8 peças com os ids canônicos compartilhados entre os serviços. É idempotente: o seed só insere os itens canônicos que faltam (`createMany` com `skipDuplicates`, `ON CONFLICT DO NOTHING`), pulando qualquer conflito de id, nome (serviço) ou SKU (peça), e o que já existe nunca é alterado, para não sobrescrever saldo movimentado por reservas nem edições; renomear, mudar um SKU ou excluir e recadastrar um item com o mesmo nome ou SKU não faz o seed falhar. Um item semeado que o ADMIN excluiu é recriado no próximo deploy, a menos que o nome ou o SKU dele já esteja em uso. `npm run db:setup` aplica as migrations, gera o client e roda o seed. No cluster, o Job `DB Migrate & Seed` roda `prisma migrate deploy` e depois `prisma db seed`.

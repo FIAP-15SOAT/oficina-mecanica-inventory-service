@@ -11,6 +11,8 @@ import { cleanDatabase } from '../helpers/db-cleanup.helper';
 import { signTestStaffToken } from '../helpers/staff-jwt.helper';
 import { TestContext, setupTestApp, teardownTestApp } from '../helpers/test-app.helper';
 
+const UNAVAILABLE_MESSAGE =
+  'Não foi possível confirmar se o item é usado em orçamentos; nada foi excluído, tente novamente mais tarde';
 const UNKNOWN_ID = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11';
 
 const { inUse, free, malformed } = JSON.parse(
@@ -143,7 +145,9 @@ describe('Catalog delete (E2E)', () => {
       const id = await createService();
       owner.behavior = { kind: 'hang' };
 
-      await deleteService(id).expect(503);
+      const res = await deleteService(id).expect(503);
+
+      expect(res.body.message).toBe(UNAVAILABLE_MESSAGE);
 
       expect(await ctx.prisma.service.count({ where: { id } })).toBe(1);
     });
@@ -152,7 +156,9 @@ describe('Catalog delete (E2E)', () => {
       const id = await createService();
       owner.behavior = { kind: 'reply', status: 500, body: { message: 'boom' } };
 
-      await deleteService(id).expect(503);
+      const res = await deleteService(id).expect(503);
+
+      expect(res.body.message).toBe(UNAVAILABLE_MESSAGE);
 
       expect(await ctx.prisma.service.count({ where: { id } })).toBe(1);
     });
@@ -161,7 +167,9 @@ describe('Catalog delete (E2E)', () => {
       const id = await createService();
       owner.behavior = { kind: 'reply', status: 200, body: malformed };
 
-      await deleteService(id).expect(503);
+      const res = await deleteService(id).expect(503);
+
+      expect(res.body.message).toBe(UNAVAILABLE_MESSAGE);
 
       expect(await ctx.prisma.service.count({ where: { id } })).toBe(1);
     });
@@ -170,7 +178,9 @@ describe('Catalog delete (E2E)', () => {
       const id = await createService();
       owner.behavior = { kind: 'reply', status: 404, body: { message: 'Rota não encontrada' } };
 
-      await deleteService(id).expect(503);
+      const res = await deleteService(id).expect(503);
+
+      expect(res.body.message).toBe(UNAVAILABLE_MESSAGE);
 
       expect(await ctx.prisma.service.count({ where: { id } })).toBe(1);
     });
@@ -218,7 +228,9 @@ describe('Catalog delete (E2E)', () => {
       const id = await createPartSupply();
       owner.behavior = { kind: 'hang' };
 
-      await deletePartSupply(id).expect(503);
+      const res = await deletePartSupply(id).expect(503);
+
+      expect(res.body.message).toBe(UNAVAILABLE_MESSAGE);
 
       expect(await ctx.prisma.partSupply.count({ where: { id } })).toBe(1);
     });
@@ -227,7 +239,9 @@ describe('Catalog delete (E2E)', () => {
       const id = await createPartSupply();
       owner.behavior = { kind: 'reply', status: 500, body: { message: 'boom' } };
 
-      await deletePartSupply(id).expect(503);
+      const res = await deletePartSupply(id).expect(503);
+
+      expect(res.body.message).toBe(UNAVAILABLE_MESSAGE);
 
       expect(await ctx.prisma.partSupply.count({ where: { id } })).toBe(1);
     });
@@ -236,7 +250,9 @@ describe('Catalog delete (E2E)', () => {
       const id = await createPartSupply();
       owner.behavior = { kind: 'reply', status: 200, body: malformed };
 
-      await deletePartSupply(id).expect(503);
+      const res = await deletePartSupply(id).expect(503);
+
+      expect(res.body.message).toBe(UNAVAILABLE_MESSAGE);
 
       expect(await ctx.prisma.partSupply.count({ where: { id } })).toBe(1);
     });
@@ -245,7 +261,9 @@ describe('Catalog delete (E2E)', () => {
       const id = await createPartSupply();
       owner.behavior = { kind: 'reply', status: 404, body: { message: 'Rota não encontrada' } };
 
-      await deletePartSupply(id).expect(503);
+      const res = await deletePartSupply(id).expect(503);
+
+      expect(res.body.message).toBe(UNAVAILABLE_MESSAGE);
 
       expect(await ctx.prisma.partSupply.count({ where: { id } })).toBe(1);
     });

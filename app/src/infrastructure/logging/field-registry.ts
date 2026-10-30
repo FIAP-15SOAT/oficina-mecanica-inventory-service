@@ -164,6 +164,13 @@ export const LOGICAL_FIELDS: Readonly<Record<LogicalFieldName, LogicalFieldDefin
     owner: 'infrastructure-service',
     sensitivity: 'clear',
   },
+  ownerStatusCode: {
+    key: 'oficina.owner.response.status_code',
+    type: 'number',
+    cardinality: 'low',
+    owner: 'infrastructure-service',
+    sensitivity: 'clear',
+  },
 };
 
 export function resolveLogicalField(logicalName: string): LogicalFieldDefinition | undefined {

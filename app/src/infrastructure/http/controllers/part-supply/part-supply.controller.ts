@@ -103,7 +103,10 @@ export class PartSupplyController {
     description: 'Peça ou Insumo atualizado com sucesso',
   })
   @ApiNotFoundResponse({ description: 'Peça ou Insumo não encontrado no Estoque' })
-  @ApiConflictResponse({ description: 'SKU já está em uso por outra Peça ou Insumo' })
+  @ApiConflictResponse({
+    description:
+      'SKU já está em uso por outra Peça ou Insumo, ou conflito de versão concorrente (reserva ou movimentação no mesmo momento)',
+  })
   @ApiBadRequestResponse({ description: 'Dados inválidos ou ID inválido' })
   @ApiUnauthorizedResponse({ description: 'Não autenticado' })
   @ApiForbiddenResponse({ description: 'Acesso negado' })
@@ -149,7 +152,8 @@ export class PartSupplyController {
       'Estoque reservado, vínculo com ordens de serviço ou orçamentos, ou movimentações de estoque e reservas no histórico',
   })
   @ApiServiceUnavailableResponse({
-    description: 'Serviço dono dos orçamentos indisponível; nada foi excluído',
+    description:
+      'Não foi possível confirmar se o item é usado em orçamentos (dono indisponível ou resposta inválida); nada foi excluído',
   })
   delete(@Param('id', ParseUUIDPipe) id: string): Promise<void> {
     return this.controller.delete(id);

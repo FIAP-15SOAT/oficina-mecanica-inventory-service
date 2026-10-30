@@ -92,4 +92,9 @@ export const TECHNICAL_EVENTS = {
     message: 'cache keys could not be deleted after a write',
     level: 'error',
   }),
+  QUOTE_ITEM_USAGE_REJECTED: defineLogEvent<{ ownerStatusCode: number }>({
+    name: 'quote_item_usage.rejected',
+    message: 'quote owner answered the usage check with a client error, reported as unavailable',
+    level: 'warn',
+  }),
 } as const;

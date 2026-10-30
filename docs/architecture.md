@@ -41,7 +41,7 @@ Use cases e Clean Controllers são classes sem `@Injectable`: o módulo Nest os 
 - **`StockMovement`** registra cada entrada, saída ou ajuste, manual ou por baixa de uma ordem de serviço. **`StockReservation`** registra quanto de cada peça está reservado para uma ordem de serviço, que aqui é só o `workOrderId`, sem chave estrangeira.
 - **Reserva por comando** (`inventory.stock.reserve`): tudo ou nada e idempotente por ordem de serviço; lê o saldo no PostgreSQL dentro da transação e grava reservas e o evento de resposta no outbox no mesmo commit.
 - **Baixa por comando** (`inventory.stock.consume`): converte as reservas da ordem em movimentações `EXIT` com o motivo `Saída por Ordem de Serviço <workOrderId>` e apaga as reservas; repetida, não muda nada.
-- Cada escrita roda numa transação do `IUnitOfWork`, e a invalidação do cache e os logs de negócio acontecem **depois** do commit.
+- Só a movimentação manual de estoque, a reserva e a baixa rodam numa transação do `IUnitOfWork`; o CRUD de serviço e de peça usa o repositório direto. Em todos, a invalidação do cache e os logs de negócio acontecem **depois** do commit.
 
 ## Kit herdado do template
 
@@ -79,7 +79,7 @@ A porta `ICache` (`get`, `set` com TTL, `delete(keys[])`) tem o adaptador `Valke
 
 ## Consulta de uso antes de excluir
 
-`DELETE` de serviço ou de peça pergunta ao dono dos orçamentos, por `GET /internal/services/:id/quote-items` e `GET /internal/parts-supplies/:id/quote-items` (base em `QUOTE_ITEMS_SERVICE_URL`), se o item está em uso. Uma resposta fora do formato `{ data: [...] }` conta como indisponibilidade, nunca como "não usado". Item em uso responde 409; dono fora do ar (rede ou 5xx) responde 503 e nada é excluído; 4xx do dono também responde 503, sem repassar o status nem a mensagem dele.
+`DELETE` de serviço ou de peça pergunta ao dono dos orçamentos, por `GET /internal/services/:id/quote-items` e `GET /internal/parts-supplies/:id/quote-items` (base em `QUOTE_ITEMS_SERVICE_URL`), se o item está em uso. Uma resposta fora do formato `{ data: [...] }` conta como indisponibilidade, nunca como "não usado". Item em uso responde 409; dono fora do ar (rede ou 5xx) responde 503 e nada é excluído; 4xx do dono também responde 503, sem repassar o status nem a mensagem dele (o status vai para o log técnico `quote_item_usage.rejected`). Os três desfechos de indisponibilidade usam a mesma mensagem, que diz que nada foi excluído e que dá para tentar de novo.
 
 ## Autenticação e Swagger
 

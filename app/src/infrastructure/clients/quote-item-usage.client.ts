@@ -4,9 +4,12 @@ import { ConfigService } from '@nestjs/config';
 import { ServiceRequestRejectedException } from '@application/exceptions/service-request-rejected.exception';
 import { IInternalHttpClient } from '@application/ports/output/internal-http-client.interface';
 import { IQuoteItemUsageClient } from '@application/ports/output/quote-item-usage-client.interface';
+import { ILogger } from '@application/ports/output/logger.service.interface';
 import { ServiceIntegrationException } from '@infrastructure/exceptions/service-integration.exception';
+import { TECHNICAL_EVENTS } from '@infrastructure/logging/technical-event.catalog';
 
-const MALFORMED_MESSAGE = 'Serviço de destino indisponível';
+const USAGE_CHECK_UNAVAILABLE_MESSAGE =
+  'Não foi possível confirmar se o item é usado em orçamentos; nada foi excluído, tente novamente mais tarde';
 
 @Injectable()
 export class QuoteItemUsageClient implements IQuoteItemUsageClient {
@@ -15,6 +18,7 @@ export class QuoteItemUsageClient implements IQuoteItemUsageClient {
   constructor(
     @Inject('IInternalHttpClient') private readonly http: IInternalHttpClient,
     config: ConfigService,
+    @Inject('ILogger') private readonly logger: ILogger,
   ) {
     this.baseUrl = config.getOrThrow<string>('QUOTE_ITEMS_SERVICE_URL').replace(/\/+$/, '');
   }
@@ -34,7 +38,7 @@ export class QuoteItemUsageClient implements IQuoteItemUsageClient {
     const items = (body as { data?: unknown } | null)?.data;
 
     if (!Array.isArray(items)) {
-      throw new ServiceIntegrationException(MALFORMED_MESSAGE);
+      throw new ServiceIntegrationException(USAGE_CHECK_UNAVAILABLE_MESSAGE);
     }
 
     return items.length > 0;
@@ -47,11 +51,16 @@ export class QuoteItemUsageClient implements IQuoteItemUsageClient {
         url: `${this.baseUrl}${path}`,
       });
     } catch (error) {
-      // A 4xx from the owner (e.g. route not exposed yet) is not the caller's fault: report unavailability.
+      // Whatever the outcome, the delete must not go ahead; only the log tells "route missing" from "owner down".
       if (error instanceof ServiceRequestRejectedException) {
-        throw new ServiceIntegrationException(MALFORMED_MESSAGE);
+        this.logger.event(
+          TECHNICAL_EVENTS.QUOTE_ITEM_USAGE_REJECTED,
+          { ownerStatusCode: error.statusCode },
+          error,
+        );
       }
-      throw error;
+
+      throw new ServiceIntegrationException(USAGE_CHECK_UNAVAILABLE_MESSAGE);
     }
   }
 }

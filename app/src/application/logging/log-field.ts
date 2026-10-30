@@ -14,6 +14,7 @@ export type LogicalFieldName =
   | 'signal'
   | 'dependencyName'
   | 'healthFailureCategory'
-  | 'healthDegradedDurationMs';
+  | 'healthDegradedDurationMs'
+  | 'ownerStatusCode';
 
 export type LogFields = Partial<Record<LogicalFieldName, unknown>>;

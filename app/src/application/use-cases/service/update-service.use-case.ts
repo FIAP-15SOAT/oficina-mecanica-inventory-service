@@ -1,5 +1,6 @@
 import { Service } from '@domain/entities/service.entity';
 import { IServiceRepository } from '@domain/interfaces/repositories/service.repository.interface';
+import { IUpdateServiceUseCase } from '@application/ports/input/service/update-service.use-case.interface';
 import { UpdateServiceDto } from '@application/ports/input/service/dto/update-service.dto';
 
 import { inventoryCacheKeys } from '@application/keys/inventory-cache-keys';
@@ -7,7 +8,7 @@ import { ICache } from '@application/ports/output/cache.service.interface';
 import { ResourceConflictException } from '@application/exceptions/resource-conflict.exception';
 import { ResourceNotFoundException } from '@application/exceptions/resource-not-found.exception';
 
-export class UpdateServiceUseCase {
+export class UpdateServiceUseCase implements IUpdateServiceUseCase {
   constructor(
     private readonly serviceRepository: IServiceRepository,
     private readonly cache: ICache,

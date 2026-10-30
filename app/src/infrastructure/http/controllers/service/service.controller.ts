@@ -120,7 +120,8 @@ export class ServiceController {
     description: 'Serviço vinculado a ordens de serviço ou orçamentos',
   })
   @ApiServiceUnavailableResponse({
-    description: 'Serviço dono dos orçamentos indisponível; nada foi excluído',
+    description:
+      'Não foi possível confirmar se o item é usado em orçamentos (dono indisponível ou resposta inválida); nada foi excluído',
   })
   delete(@Param('id', ParseUUIDPipe) id: string): Promise<void> {
     return this.controller.delete(id);

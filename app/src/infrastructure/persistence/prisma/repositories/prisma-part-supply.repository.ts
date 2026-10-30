@@ -124,10 +124,16 @@ export class PrismaPartSupplyRepository implements IPartSupplyRepository {
 
       return PartSupplyMapper.toDomain(record);
     } catch (error) {
-      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
-        throw new ConcurrencyException(
-          'Peça/insumo foi modificado por outra operação. Tente novamente',
-        );
+      if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        // Concurrent request took the SKU after the check.
+        if (error.code === 'P2002') {
+          throw new ResourceConflictException('Peça ou insumo já cadastrado');
+        }
+        if (error.code === 'P2025') {
+          throw new ConcurrencyException(
+            'Peça/insumo foi modificado por outra operação. Tente novamente',
+          );
+        }
       }
       throw error;
     }

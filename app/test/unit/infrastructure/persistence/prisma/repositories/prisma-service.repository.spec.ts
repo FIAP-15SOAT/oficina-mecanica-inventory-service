@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { Prisma } from '@generated/client';
 
+import { ResourceConflictException } from '@application/exceptions/resource-conflict.exception';
 import { ResourceNotFoundException } from '@application/exceptions/resource-not-found.exception';
 import { Service } from '@domain/entities/service.entity';
 
@@ -118,31 +119,6 @@ describe('PrismaServiceRepository', () => {
 
       expect(result).toBeNull();
       expect(prisma.service.findUnique).toHaveBeenCalledWith({ where: { id } });
-    });
-  });
-
-  describe('findByIds', () => {
-    it('should return services for the given ids', async () => {
-      const svc1 = createMockService();
-      const svc2 = createMockService();
-
-      prisma.service.findMany.mockResolvedValue([svc1, svc2]);
-
-      const result = await repository.findByIds([svc1.id, svc2.id]);
-
-      expect(result).toHaveLength(2);
-      expect(prisma.service.findMany).toHaveBeenCalledWith({
-        where: { id: { in: [svc1.id, svc2.id] } },
-      });
-    });
-
-    it('should return empty array when ids array is empty', async () => {
-      prisma.service.findMany.mockResolvedValue([]);
-      const result = await repository.findByIds([]);
-      expect(result).toEqual([]);
-      expect(prisma.service.findMany).toHaveBeenCalledWith({
-        where: { id: { in: [] } },
-      });
     });
   });
 
@@ -296,6 +272,39 @@ describe('PrismaServiceRepository', () => {
           estimatedTimeMin: service.estimatedTimeMin,
         },
       });
+    });
+  });
+
+  describe('update failures', () => {
+    const knownError = (code: string): Prisma.PrismaClientKnownRequestError =>
+      new Prisma.PrismaClientKnownRequestError('Failure', { code, clientVersion: '5.0.0' });
+    const service = Service.create({
+      name: 'Tire Rotation',
+      basePrice: 49.99,
+      estimatedTimeMin: 30,
+    });
+
+    it('should throw ResourceConflictException when a concurrent request took the name (P2002)', async () => {
+      prisma.service.update.mockRejectedValue(knownError('P2002'));
+
+      await expect(repository.update(service)).rejects.toThrow(
+        new ResourceConflictException('Serviço já cadastrado'),
+      );
+    });
+
+    it('should throw ResourceNotFoundException when the service was removed meanwhile (P2025)', async () => {
+      prisma.service.update.mockRejectedValue(knownError('P2025'));
+
+      await expect(repository.update(service)).rejects.toBeInstanceOf(ResourceNotFoundException);
+    });
+
+    it.each([
+      ['another Prisma error', knownError('P2003')],
+      ['an unknown error', new Error('db down')],
+    ])('should rethrow %s', async (_label, error) => {
+      prisma.service.update.mockRejectedValue(error);
+
+      await expect(repository.update(service)).rejects.toBe(error);
     });
   });
 
