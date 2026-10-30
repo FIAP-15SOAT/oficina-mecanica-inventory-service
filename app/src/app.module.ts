@@ -16,6 +16,7 @@ import { PrismaModule } from './infrastructure/persistence/prisma/prisma.module'
 import { HealthModule } from './infrastructure/http/controllers/health/health.module';
 import { MessagingModule } from './infrastructure/messaging/messaging.module';
 import { CacheModule } from './infrastructure/cache/cache.module';
+import { ServiceModule } from './infrastructure/http/controllers/service/service.module';
 import { ClientsModule } from './infrastructure/clients/clients.module';
 
 @Module({
@@ -30,6 +31,7 @@ import { ClientsModule } from './infrastructure/clients/clients.module';
     CacheModule,
     ClientsModule,
     HealthModule,
+    ServiceModule,
   ],
   providers: [
     {
