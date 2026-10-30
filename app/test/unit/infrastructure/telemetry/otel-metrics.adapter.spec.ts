@@ -12,7 +12,7 @@ import { BusinessMetricDefinition } from '@application/metrics/business-metric';
 import { OtelMetricsAdapter } from '@infrastructure/telemetry/otel-metrics.adapter';
 import { captureDiagnostics, DiagnosticsCapture } from '../../../helpers/diagnostics-capture';
 
-// The registry is empty until the inventory catalog (C-15): the adapter is exercised
+// The registry is empty: the adapter is exercised
 // against a test registry with one counter, one exponential histogram and one attribute.
 jest.mock('@infrastructure/telemetry/metric-registry', () => {
   const { AggregationType } = jest.requireActual<typeof import('@opentelemetry/sdk-metrics')>(

@@ -45,4 +45,3 @@ A regra é imposta por ferramenta: a cerca ESLint de `app/eslint.config.mjs` pro
 ## Referências
 
 - [Arquitetura › Camadas](../architecture.md#camadas)
-- Architecture Spine, AD-2 e AD-3 (cada serviço é dono do seu banco)

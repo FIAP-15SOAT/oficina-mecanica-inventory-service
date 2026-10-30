@@ -38,4 +38,3 @@ Rodar toda a suíte E2E (`npm run test:e2e`) com Testcontainers, sem mock de inf
 ## Referências
 
 - [Testes](../testing.md)
-- Architecture Spine, AD-19

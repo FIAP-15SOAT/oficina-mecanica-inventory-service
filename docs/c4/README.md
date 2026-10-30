@@ -37,7 +37,7 @@ docker run --rm -i plantuml/plantuml:latest -tpng -pipe < inventory-component.pu
 | Borda HTTP | Controllers finos, Swagger em `/api/docs`, filtros de exceção, Helmet, CORS e pipes de validação |
 | Guard de autenticação | `AuthenticationGuard` deny-by-default e `StaffJwtStrategy` (RS256, `kid`, `iss`, `aud`, `exp`, `typ`), sem consultar o Identity |
 | Health | `/api/health/live` e `/api/health/ready` (prontidão confere o PostgreSQL) |
-| Clean Controllers e Use Cases | Casos de uso e adaptadores de interface; vazio até a change de domínio |
+| Clean Controllers e Use Cases | Casos de uso e adaptadores de interface; ainda vazio |
 | Catálogo de mensagens | Tipos `inventory.stock.reserve`, `consume`, `reserved` e `reservation_failed` |
 | Unit of Work e Outbox Repository | Gravam o estado e a linha do `outbox` na mesma transação (Prisma) |
 | Outbox Relay | A cada 500 ms publica até 10 linhas no SNS com `MessageGroupId` = `workOrderId` ou `messageId`, sob advisory lock |

@@ -1,6 +1,6 @@
 # Arquitetura
 
-Visão do Inventory Service como está no repositório. As decisões estão nas [ADRs](adr/) e a linha de base da solução está no Architecture Spine do repositório de specs (AD-2, AD-3, AD-6, AD-9, AD-10, AD-11, AD-18).
+Visão do Inventory Service como está no repositório. As decisões estão nas [ADRs](adr/).
 
 ## Índice
 
@@ -38,7 +38,7 @@ Migration roda só como passo separado (serviço `migrate` do Compose, Job do Ku
 
 ## Mensageria com outbox
 
-Consistência entre serviços só por mensagem com outbox gravado na mesma transação do produtor, por REST interno ou por Saga orquestrada pelo Work Order (AD-6, AD-9).
+Consistência entre serviços só por mensagem com outbox gravado na mesma transação do produtor, por REST interno ou por Saga orquestrada pelo Work Order.
 
 ```text
 caso de uso --(mesma transação)--> estado + linha em `outbox`
@@ -49,20 +49,20 @@ OutboxRelayService (500 ms) --> SNS FIFO oficina-events.fifo --> SQS FIFO invent
 - **Tabela `outbox`**: `id` sequencial, `message_id` único, `type`, `work_order_id` (nulo sem OS), `payload`, `trace_context` e `created_at`. É a única tabela da migration baseline.
 - **Relay** (`OutboxRelayService`): a cada 500 ms abre uma transação, toma `pg_try_advisory_xact_lock` (só uma réplica publica), lê até 10 linhas por `id`, publica uma a uma e apaga as publicadas na mesma transação. Na primeira falha o lote para, para não furar a ordem, e registra `messaging.outbox.publish_failed`. Nenhuma publicação começa depois de 2 s de lote.
 - **`MessageGroupId`**: no `PublishCommand` do relay é `workOrderId ?? messageId`. Mensagem de uma OS usa o `workOrderId` e mantém a ordem por OS; mensagem sem OS usa o próprio `messageId`, então vira um grupo de uma mensagem só e não bloqueia nem é bloqueada por outras. O `MessageDeduplicationId` é o `messageId`, e o atributo `type` alimenta a filter policy.
-- **Envelope**: `messageId`, `type`, `occurredAt`, `workOrderId` e `payload`. O contexto W3C (`traceparent`) vai gravado em `trace_context` na linha do outbox e sai nos atributos da mensagem (AD-10, AD-18).
+- **Envelope**: `messageId`, `type`, `occurredAt`, `workOrderId` e `payload`. O contexto W3C (`traceparent`) vai gravado em `trace_context` na linha do outbox e sai nos atributos da mensagem.
 - **Consumidor** (`SqsConsumerService`): lê `inventory.fifo` (nome vindo de `INVENTORY_QUEUE_NAME`, URL resolvida na inicialização), uma mensagem por vez, com long polling de 20 s. Só confirma no sucesso. Envelope inválido, payload inválido ou tipo sem handler deixam a mensagem na fila e, na quinta entrega, o SQS a move para `inventory-dlq.fifo`. O consumidor não usa o `MessageGroupId`: a ordem por grupo é garantida pela própria FIFO.
 - **Catálogo de tipos** (`domain/messaging/`): consumidos `inventory.stock.reserve` e `inventory.stock.consume`; publicados `inventory.stock.reserved` e `inventory.stock.reservation_failed`. Ainda não há handlers registrados: uma mensagem desses tipos que chegar agora é registrada como `messaging.message.unhandled`, não é confirmada e vai para a DLQ, que a guarda para redrive.
 - **Topologia local**: `app/localstack/init-topology.sh` é cópia do `oficina-mecanica-infra-messaging` e não é editado aqui.
 
 ## Cache do dono
 
-A porta `ICache` (`get`, `set` com TTL, `delete(keys[])`) tem o adaptador `ValkeyCacheAdapter` (`ioredis`, `CACHE_URL`, TTL de `CACHE_TTL_SECONDS`, padrão 43200 s). O cache é cache-aside e só do dono: este serviço guarda no próprio Valkey apenas dados que ele mesmo escreve, e nunca o dado de outro serviço (AD-2, AD-3). Falha do cache nunca derruba a API: a leitura devolve falta e registra `cache.unavailable`; falha na invalidação registra `cache.invalidation_failed` e a chave expira pelo TTL. Hoje nenhum valor é guardado: os casos de uso de catálogo e estoque é que vão usar a porta.
+A porta `ICache` (`get`, `set` com TTL, `delete(keys[])`) tem o adaptador `ValkeyCacheAdapter` (`ioredis`, `CACHE_URL`, TTL de `CACHE_TTL_SECONDS`, padrão 43200 s). O cache é cache-aside e só do dono: este serviço guarda no próprio Valkey apenas dados que ele mesmo escreve, e nunca o dado de outro serviço. Falha do cache nunca derruba a API: a leitura devolve falta e registra `cache.unavailable`; falha na invalidação registra `cache.invalidation_failed` e a chave expira pelo TTL. Hoje nenhum valor é guardado: os casos de uso de catálogo e estoque é que vão usar a porta.
 
 ## Autenticação e Swagger
 
-- O guard global (`AuthenticationGuard`) exige o token de funcionário em toda rota, exceto as marcadas com `@Public()` (os health checks). A validação é local, RS256, com `STAFF_JWT_PUBLIC_KEY`, `kid`, `iss`, `aud`, `exp` e `typ`, sem consultar o Identity (AD-11). O serviço não recebe a chave do token de cliente: token de cliente falha na assinatura e responde 401.
+- O guard global (`AuthenticationGuard`) exige o token de funcionário em toda rota, exceto as marcadas com `@Public()` (os health checks). A validação é local, RS256, com `STAFF_JWT_PUBLIC_KEY`, `kid`, `iss`, `aud`, `exp` e `typ`, sem consultar o Identity. O serviço não recebe a chave do token de cliente: token de cliente falha na assinatura e responde 401.
 - O Swagger (`/api/docs` e `/api/docs-json`) é montado pelo `SwaggerModule.setup` direto no Express, **fora do router do Nest e do guard**: por isso responde sem token. É isso que permite ao DAST ler `/api/docs-json` sem credencial e ao Postman abri-lo sem token. A UI declara o esquema Bearer `access-token` para testar rotas protegidas.
-- Toda chamada interna leva `x-request-id` e `traceparent` (AD-10, AD-18).
+- Toda chamada interna leva `x-request-id` e `traceparent`.
 
 ## Modelo C4
 

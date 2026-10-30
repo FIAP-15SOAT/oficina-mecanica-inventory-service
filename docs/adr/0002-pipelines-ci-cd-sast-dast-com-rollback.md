@@ -57,4 +57,3 @@ Validar uma mudança, entregá-la, analisá-la estaticamente e atacá-la com um 
 ## Referências
 
 - [CI/CD](../ci-cd.md)
-- Architecture Spine, AD-15, AD-16 e AD-20

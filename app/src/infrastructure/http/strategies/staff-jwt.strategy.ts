@@ -37,7 +37,7 @@ function readRequired(configService: ConfigService, name: string): string {
 }
 
 /**
- * Validates the staff access token locally (AD-11): passport-jwt checks the
+ * Validates the staff access token locally: passport-jwt checks the
  * RS256 signature, iss, aud and exp; validate() checks kid, typ and claims.
  * No lookup against Identity.
  */

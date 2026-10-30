@@ -16,7 +16,7 @@ Outbox transacional no PostgreSQL do serviço, relay no próprio processo, um t�
 2. **Relay** (`OutboxRelayService`): a cada 500 ms abre uma transação, toma `pg_try_advisory_xact_lock` (só uma réplica publica), lê até 10 linhas por `id`, publica uma a uma e apaga as publicadas na mesma transação. Para na primeira falha, para não furar a ordem.
 3. **Tópico e filas.** Um tópico `oficina-events.fifo` para a solução e uma fila por consumidor, com filter policy por atributo `type`. Este serviço consome `inventory.fifo`, com DLQ `inventory-dlq.fifo` e `maxReceiveCount` 5.
 4. **`MessageGroupId` = `workOrderId`, ou o `messageId` quando a mensagem não tem OS** (`row.workOrderId ?? row.messageId`, no relay). Com OS, a ordem é por OS. Sem OS, cada mensagem forma o próprio grupo: não há ordem a preservar e uma mensagem com falha não segura as demais. O `MessageDeduplicationId` é o `messageId`.
-5. **Envelope** de cinco campos (`messageId`, `type`, `occurredAt`, `workOrderId`, `payload`); correlação e causalidade pelo contexto W3C nos atributos, gravado no outbox (AD-10, AD-18).
+5. **Envelope** de cinco campos (`messageId`, `type`, `occurredAt`, `workOrderId`, `payload`); correlação e causalidade pelo contexto W3C nos atributos, gravado no outbox.
 6. **Consumidor** (`SqsConsumerService`): uma mensagem por vez, confirma só no sucesso; erro, envelope ou payload inválido e tipo sem handler deixam a mensagem na fila, e na quinta entrega o SQS a manda para a DLQ. Handlers idempotentes.
 
 ## Alternativas consideradas
@@ -52,6 +52,5 @@ Outbox transacional no PostgreSQL do serviço, relay no próprio processo, um t�
 ## Referências
 
 - [Arquitetura › Mensageria com outbox](../architecture.md#mensageria-com-outbox)
-- Architecture Spine, AD-6 e AD-9
 - [AWS — SNS FIFO topics](https://docs.aws.amazon.com/sns/latest/dg/sns-fifo-topics.html)
 - [Transactional outbox](https://microservices.io/patterns/data/transactional-outbox.html)

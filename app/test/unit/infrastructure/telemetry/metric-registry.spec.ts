@@ -19,7 +19,7 @@ type Assert<T extends true> = T;
  */
 type _NoHighCardinalityAttribute = Assert<'high' extends MetricCardinality ? false : true>;
 
-/** The inventory business metrics enter with the catalog (C-15); until then the registry is empty. */
+/** No inventory business metric is declared yet, so the registry is empty. */
 describe('metric registry', () => {
   it('should declare no metric and no attribute yet', () => {
     expect(METRIC_REGISTRY).toEqual({});
@@ -43,7 +43,7 @@ describe('metric registry views', () => {
   afterEach(() => jest.restoreAllMocks());
 
   it('should build a view only for an entry with a custom aggregation', () => {
-    // The registry is empty until C-15, so the entries are injected while the module loads.
+    // The registry is empty, so the entries are injected while the module loads.
     const explicit = {
       type: AggregationType.EXPLICIT_BUCKET_HISTOGRAM,
       options: { boundaries: [1] },

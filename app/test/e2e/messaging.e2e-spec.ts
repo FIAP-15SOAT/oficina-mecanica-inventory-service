@@ -54,7 +54,7 @@ async function waitFor(
   }
 }
 
-// The service registers no handler yet (C-15 does). The suite registers one test handler for
+// The service registers no handler yet. The suite registers one test handler for
 // inventory.stock.reserve, routed by work order id, to prove processing, ack and FIFO order; every
 // other type has no handler and must stay in the queue until the redrive moves it to the DLQ.
 // Messages go straight to inventory.fifo (not through the topic), each test with its own group, so

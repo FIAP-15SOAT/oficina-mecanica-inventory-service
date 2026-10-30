@@ -13,7 +13,7 @@ Cada serviço é o único cliente do próprio banco e do próprio cache. Um dado
 Cache-aside no ElastiCache for Valkey do próprio serviço (`cache-oficina-mecanica-inventory`), só para dados que o Inventory é dono, com invalidação no caso de uso depois do commit.
 
 1. **Porta e adaptador.** `ICache` (`get`, `set` com TTL, `delete(keys[])`) em `application/ports/output/`; `ValkeyCacheAdapter` com `ioredis` por `CACHE_URL` (`rediss://` com senha no cluster, `redis://` local). TTL por `CACHE_TTL_SECONDS` (padrão 43200 s, 12 h).
-2. **Só o dono guarda.** O serviço nunca guarda no cache o dado de outro serviço: guarda só o id e busca o dado no dono (AD-2, AD-3).
+2. **Só o dono guarda.** O serviço nunca guarda no cache o dado de outro serviço: guarda só o id e busca o dado no dono.
 3. **Falha do cache vira leitura no banco.** Falha de leitura registra `cache.unavailable` e conta como falta; falha de exclusão registra `cache.invalidation_failed` e a chave expira pelo TTL. A prontidão não depende do cache.
 4. **Escopo atual.** A porta e o adaptador existem e estão testados; nenhum valor é guardado ainda. As chaves e a invalidação entram com os casos de uso de catálogo e estoque.
 
@@ -44,5 +44,4 @@ Cache-aside no ElastiCache for Valkey do próprio serviço (`cache-oficina-mecan
 ## Referências
 
 - [Arquitetura › Cache do dono](../architecture.md#cache-do-dono)
-- Architecture Spine, AD-2 e AD-3
 - [Cache-aside](https://learn.microsoft.com/azure/architecture/patterns/cache-aside)

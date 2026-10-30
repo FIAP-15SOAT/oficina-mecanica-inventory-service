@@ -34,3 +34,6 @@ openspec/
 
 superpowers/
 .superpowers/
+
+# Private keys (PEM) never enter the repository
+*.pem
