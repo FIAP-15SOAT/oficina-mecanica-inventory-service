@@ -35,7 +35,7 @@ docker run --rm -i plantuml/plantuml:latest -tpng -pipe < inventory-component.pu
 | Componente | Responsabilidade |
 | --- | --- |
 | Borda HTTP | Controllers finos, Swagger em `/api/docs`, filtros de exceção, Helmet, CORS e pipes de validação |
-| Guard de autenticação | `AuthenticationGuard` deny-by-default e `StaffJwtStrategy` (RS256, `kid`, `iss`, `aud`, `exp`, `typ`), sem consultar o Identity |
+| Guard de autenticação | `AuthenticationGuard` deny-by-default e `JwtStrategy` (RS256, `kid`, `iss`, `aud`, `exp`, `typ`), sem consultar o Identity |
 | Health | `/api/health/live` e `/api/health/ready` (prontidão confere o PostgreSQL) |
 | Clean Controllers e Use Cases | Casos de uso e adaptadores de interface; ainda vazio |
 | Catálogo de mensagens | Tipos `inventory.stock.reserve`, `consume`, `reserved` e `reservation_failed` |

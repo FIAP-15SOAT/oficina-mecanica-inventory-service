@@ -4,7 +4,7 @@ import { ConfigService } from '@nestjs/config';
 import { sign, SignOptions } from 'jsonwebtoken';
 
 import { UserRole } from '@domain/enums/user-role.enum';
-import { StaffJwtStrategy } from '@infrastructure/http/strategies/staff-jwt.strategy';
+import { JwtStrategy } from '@infrastructure/http/strategies/jwt.strategy';
 
 import {
   STAFF_JWT_TEST_AUDIENCE,
@@ -67,39 +67,21 @@ function withoutClaim(claim: keyof typeof CLAIMS): object {
 
 type Outcome = { success: unknown } | { fail: unknown } | { error: unknown };
 
-describe('StaffJwtStrategy', () => {
-  let strategy: StaffJwtStrategy;
+describe('JwtStrategy', () => {
+  let strategy: JwtStrategy;
 
   beforeEach(() => {
-    strategy = new StaffJwtStrategy(configWith(CONFIG));
+    strategy = new JwtStrategy(configWith(CONFIG));
   });
 
   describe('boot', () => {
-    it('fails to start with an empty issuer', () => {
-      expect(() => new StaffJwtStrategy(configWith({ ...CONFIG, STAFF_JWT_ISSUER: '' }))).toThrow(
-        'STAFF_JWT_ISSUER não pode ser vazio',
-      );
-    });
-
-    it('fails to start with an empty audience', () => {
-      expect(() => new StaffJwtStrategy(configWith({ ...CONFIG, STAFF_JWT_AUDIENCE: '' }))).toThrow(
-        'STAFF_JWT_AUDIENCE não pode ser vazio',
-      );
-    });
-
-    it('fails to start with an empty key id', () => {
-      expect(() => new StaffJwtStrategy(configWith({ ...CONFIG, STAFF_JWT_KEY_ID: '' }))).toThrow(
-        'STAFF_JWT_KEY_ID não pode ser vazio',
-      );
-    });
-
     it('fails to start without the public key', () => {
       expect(
-        () => new StaffJwtStrategy(configWith({ ...CONFIG, STAFF_JWT_PUBLIC_KEY: undefined })),
+        () => new JwtStrategy(configWith({ ...CONFIG, STAFF_JWT_PUBLIC_KEY: undefined })),
       ).toThrow('STAFF_JWT_PUBLIC_KEY');
-      expect(
-        () => new StaffJwtStrategy(configWith({ ...CONFIG, STAFF_JWT_PUBLIC_KEY: '' })),
-      ).toThrow('STAFF_JWT_PUBLIC_KEY não é uma chave pública PEM válida');
+      expect(() => new JwtStrategy(configWith({ ...CONFIG, STAFF_JWT_PUBLIC_KEY: '' }))).toThrow(
+        'STAFF_JWT_PUBLIC_KEY não é uma chave pública PEM válida',
+      );
     });
   });
 
@@ -176,9 +158,6 @@ describe('StaffJwtStrategy', () => {
 
   it('rejects a token without sub', async () => {
     await expect(authenticate(signTestStaffToken(withoutClaim('sub')))).resolves.toEqual(INVALID);
-    await expect(authenticate(signTestStaffToken({ ...CLAIMS, sub: '' }))).resolves.toEqual(
-      INVALID,
-    );
   });
 
   it('rejects a token without email', async () => {

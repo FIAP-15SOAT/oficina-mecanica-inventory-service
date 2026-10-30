@@ -1,6 +1,5 @@
 import { MetricAttributes } from './metric-attribute';
 
-// No inventory business metric is declared yet.
 export type BusinessMetricName = never;
 
 export type MetricInstrumentKind = 'counter' | 'histogram';

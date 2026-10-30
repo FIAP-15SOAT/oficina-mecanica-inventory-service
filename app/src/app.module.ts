@@ -8,7 +8,7 @@ import { DomainExceptionFilter } from './infrastructure/http/filters/domain-exce
 import { InfrastructureExceptionFilter } from './infrastructure/http/filters/infrastructure-exception.filter';
 import { AuthenticationGuard } from './infrastructure/http/guards/authentication.guard';
 import { JwtAuthGuard } from './infrastructure/http/guards/jwt-auth.guard';
-import { StaffJwtStrategy } from './infrastructure/http/strategies/staff-jwt.strategy';
+import { JwtStrategy } from './infrastructure/http/strategies/jwt.strategy';
 
 import { LoggingModule } from './infrastructure/logging/logging.module';
 import { TelemetryModule } from './infrastructure/telemetry/telemetry.module';
@@ -48,7 +48,7 @@ import { ClientsModule } from './infrastructure/clients/clients.module';
       provide: APP_FILTER,
       useClass: InfrastructureExceptionFilter,
     },
-    StaffJwtStrategy,
+    JwtStrategy,
     JwtAuthGuard,
     {
       provide: APP_GUARD,

@@ -26,15 +26,18 @@ export const METRIC_ATTRIBUTE_REGISTRY: Readonly<
  * Entries with the default aggregation produce no View — a "default" View would
  * be noise with no effect.
  */
-export const METRIC_VIEWS: readonly ViewOptions[] = Object.values<MetricRegistryEntry>(
-  METRIC_REGISTRY,
-)
-  .filter((entry) => entry.aggregation.type !== AggregationType.DEFAULT)
-  .map((entry) => ({ instrumentName: entry.key, aggregation: entry.aggregation }));
+export function buildMetricViews(
+  registry: Readonly<Record<string, MetricRegistryEntry>>,
+): readonly ViewOptions[] {
+  return Object.values(registry)
+    .filter((entry) => entry.aggregation.type !== AggregationType.DEFAULT)
+    .map((entry) => ({ instrumentName: entry.key, aggregation: entry.aggregation }));
+}
 
-export function resolveMetricKey(name: BusinessMetricName): string {
+export const METRIC_VIEWS: readonly ViewOptions[] = buildMetricViews(METRIC_REGISTRY);
+
+export function resolveMetricKey<TName extends BusinessMetricName>(name: TName): string {
   const entry: MetricRegistryEntry = METRIC_REGISTRY[name];
-
   return entry.key;
 }
 

@@ -14,7 +14,7 @@ queue "SQS FIFO\ninventory.fifo + DLQ\n[Fila]" as sqs
 
 rectangle "Inventory Service [Container: NestJS 12]" {
   component "Borda HTTP\n[Controllers, Swagger, filtros]" as http
-  component "Guard de autenticação\n[AuthenticationGuard + StaffJwtStrategy, RS256]" as guard
+  component "Guard de autenticação\n[AuthenticationGuard + JwtStrategy, RS256]" as guard
   component "Health\n[HealthController, ReadinessState]" as health
   component "Clean Controllers e Use Cases\n[application + interface-adapters, ainda vazio]" as usecases
   component "Catálogo de mensagens\n[domain/messaging]" as catalog

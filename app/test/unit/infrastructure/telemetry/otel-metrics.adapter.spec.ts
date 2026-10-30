@@ -8,60 +8,51 @@ import {
   ResourceMetrics,
 } from '@opentelemetry/sdk-metrics';
 
-import { BusinessMetricDefinition } from '@application/metrics/business-metric';
+import { defineBusinessMetric } from '@application/metrics/business-metric';
+import { METRIC_VIEWS } from '@infrastructure/telemetry/metric-registry';
 import { OtelMetricsAdapter } from '@infrastructure/telemetry/otel-metrics.adapter';
 import { captureDiagnostics, DiagnosticsCapture } from '../../../helpers/diagnostics-capture';
 
-// The registry is empty: the adapter is exercised
-// against a test registry with one counter, one exponential histogram and one attribute.
+// The kit's catalog is empty; these fixtures stand in for the service's first business metrics.
 jest.mock('@infrastructure/telemetry/metric-registry', () => {
+  const actual = jest.requireActual<typeof import('@infrastructure/telemetry/metric-registry')>(
+    '@infrastructure/telemetry/metric-registry',
+  );
   const { AggregationType } = jest.requireActual<typeof import('@opentelemetry/sdk-metrics')>(
     '@opentelemetry/sdk-metrics',
   );
-  const registry: Record<string, string> = {
-    'test.created': 'oficina.test.created',
-    'test.duration': 'oficina.test.duration',
+  const registry: Record<string, { key: string; aggregation: { type: number } }> = {
+    'test.created': { key: 'oficina.test.created', aggregation: { type: AggregationType.DEFAULT } },
+    'test.duration': {
+      key: 'oficina.test.duration',
+      aggregation: { type: AggregationType.EXPONENTIAL_HISTOGRAM },
+    },
   };
   const attributes: Record<string, { key: string; cardinality: string }> = {
     testStatus: { key: 'oficina.test.status', cardinality: 'low' },
   };
 
   return {
-    METRIC_VIEWS: [
-      {
-        instrumentName: 'oficina.test.duration',
-        aggregation: { type: AggregationType.EXPONENTIAL_HISTOGRAM },
-      },
-    ],
-    resolveMetricKey: (name: string) => registry[name],
+    ...actual,
+    METRIC_VIEWS: actual.buildMetricViews(registry),
+    resolveMetricKey: (name: string) => registry[name].key,
     resolveMetricAttribute: (name: string) => attributes[name],
   };
 });
 
-import { METRIC_VIEWS } from '@infrastructure/telemetry/metric-registry';
+const TEST_CREATED = defineBusinessMetric<Record<never, never>>({
+  name: 'test.created' as never,
+  kind: 'counter',
+  unit: '{test}',
+  description: 'Test counter',
+});
 
-const TEST_METRICS = {
-  CREATED: {
-    name: 'test.created',
-    kind: 'counter',
-    unit: '{item}',
-    description: 'test counter',
-  } as unknown as BusinessMetricDefinition<Record<never, never>>,
-  DURATION: {
-    name: 'test.duration',
-    kind: 'histogram',
-    unit: 's',
-    description: 'test duration',
-  } as unknown as BusinessMetricDefinition<{ testStatus: string }>,
-  PLAIN_DURATION: {
-    name: 'test.duration',
-    kind: 'histogram',
-    unit: 's',
-    description: 'test duration',
-  } as unknown as BusinessMetricDefinition<Record<never, never>>,
-};
-
-const STATUS_KEY = 'oficina.test.status';
+const TEST_DURATION = defineBusinessMetric<{ testStatus?: string }>({
+  name: 'test.duration' as never,
+  kind: 'histogram',
+  unit: 's',
+  description: 'Test duration',
+});
 
 const ONE_MINUTE_SECONDS = 60;
 const THREE_HOURS_SECONDS = 3 * 60 * 60;
@@ -113,23 +104,23 @@ describe('OtelMetricsAdapter', () => {
 
   describe('logical to physical name translation', () => {
     it('should emit the counter under the registry physical name, in the owned namespace', async () => {
-      harness.adapter.increment(TEST_METRICS.CREATED, {});
+      harness.adapter.increment(TEST_CREATED, {});
 
       const metric = findMetric(await harness.collect(), 'oficina.test.created');
 
-      expect(metric?.descriptor.unit).toBe('{item}');
+      expect(metric?.descriptor.unit).toBe('{test}');
       expect(metric?.dataPoints[0].value).toBe(1);
     });
 
     it('should translate the logical attribute name to the declared physical key', async () => {
-      harness.adapter.record(TEST_METRICS.DURATION, 42, {
+      harness.adapter.record(TEST_DURATION, 42, {
         testStatus: 'APPROVED',
       });
 
       const metric = findMetric(await harness.collect(), 'oficina.test.duration');
 
       expect(metric?.dataPoints[0].attributes).toEqual({
-        [STATUS_KEY]: 'APPROVED',
+        'oficina.test.status': 'APPROVED',
       });
       expect(metric?.descriptor.unit).toBe('s');
     });
@@ -147,12 +138,12 @@ describe('OtelMetricsAdapter', () => {
     });
 
     /**
-     * The per-metric restriction is compile-time (`NoExtraFields`); this is the
-     * second line, against whatever slips through an `as`. An unknown attribute
+     * The per-metric restriction is at compile time (`NoExtraFields`); this is
+     * the second line, against whatever crosses an `as`. An unknown attribute
      * emitted under the raw name would reach the destination as a new series.
      */
     it('should drop an attribute the logical vocabulary does not know', async () => {
-      harness.adapter.record(TEST_METRICS.DURATION, 10, {
+      harness.adapter.record(TEST_DURATION, 10, {
         testStatus: 'APPROVED',
         workOrderId: 'e2a1b0c4-0000-4000-8000-000000000000',
       } as unknown as { testStatus: string });
@@ -160,17 +151,18 @@ describe('OtelMetricsAdapter', () => {
       const metric = findMetric(await harness.collect(), 'oficina.test.duration');
 
       expect(metric?.dataPoints[0].attributes).toEqual({
-        [STATUS_KEY]: 'APPROVED',
+        'oficina.test.status': 'APPROVED',
       });
       expect(diagnostics.text()).toContain('undeclared-attribute:workOrderId');
     });
 
     /**
      * A missing attribute becomes neither a new series nor the string
-     * "undefined": it is left out, and the metric stays comparable to the others.
+     * "undefined": it simply stays out, and the metric stays comparable with the
+     * others.
      */
     it('should ignore an attribute whose value was not provided', async () => {
-      harness.adapter.record(TEST_METRICS.DURATION, 5, {
+      harness.adapter.record(TEST_DURATION, 5, {
         testStatus: undefined,
       } as unknown as { testStatus: string });
 
@@ -181,7 +173,7 @@ describe('OtelMetricsAdapter', () => {
     });
 
     it('should drop an attribute value that is not an accepted primitive', async () => {
-      harness.adapter.record(TEST_METRICS.DURATION, 5, {
+      harness.adapter.record(TEST_DURATION, 5, {
         testStatus: { toString: () => 'APPROVED' },
       } as unknown as { testStatus: string });
 
@@ -192,7 +184,7 @@ describe('OtelMetricsAdapter', () => {
     });
 
     it('should report and not emit when the instrument does not match the operation', async () => {
-      harness.adapter.increment(TEST_METRICS.DURATION, {} as never);
+      harness.adapter.increment(TEST_DURATION, {} as never);
 
       expect(findMetric(await harness.collect(), 'oficina.test.duration')).toBeUndefined();
       expect(diagnostics.text()).toContain('instrument-mismatch');
@@ -210,7 +202,7 @@ describe('OtelMetricsAdapter', () => {
           throw new Error('meter indisponível');
         });
 
-      expect(() => failing.increment(TEST_METRICS.CREATED, {})).not.toThrow();
+      expect(() => failing.increment(TEST_CREATED, {})).not.toThrow();
       expect(diagnostics.text()).toContain('metric-emission');
     });
   });
@@ -220,9 +212,9 @@ describe('OtelMetricsAdapter', () => {
       const createCounter = jest.spyOn(metrics.getMeter('probe'), 'createCounter');
       const adapter = new OtelMetricsAdapter();
 
-      adapter.increment(TEST_METRICS.CREATED, {});
-      adapter.increment(TEST_METRICS.CREATED, {});
-      adapter.increment(TEST_METRICS.CREATED, {});
+      adapter.increment(TEST_CREATED, {});
+      adapter.increment(TEST_CREATED, {});
+      adapter.increment(TEST_CREATED, {});
 
       const metric = findMetric(await harness.collect(), 'oficina.test.created');
 
@@ -236,14 +228,14 @@ describe('OtelMetricsAdapter', () => {
   describe('aggregation declared in the registry', () => {
     /**
      * The default histogram aggregation ends at 10 000 and is sized for request
-     * **milliseconds**; dwell times range from minutes to days in **seconds**,
-     * and every observation would land in the last bucket. The average would
-     * stay right and the percentiles — the dashboard's reason to exist — would
-     * mean nothing, with nothing failing.
+     * **milliseconds**; durations go from minutes to days in **seconds**, and
+     * every observation would fall in the last bucket. The mean would stay right
+     * and the percentiles — the dashboard's reason to exist — would mean nothing,
+     * with nothing failing.
      */
     it('should place 60 s, 3 h and 5 days in different buckets', async () => {
       for (const seconds of [ONE_MINUTE_SECONDS, THREE_HOURS_SECONDS, FIVE_DAYS_SECONDS]) {
-        harness.adapter.record(TEST_METRICS.PLAIN_DURATION, seconds, {});
+        harness.adapter.record(TEST_DURATION, seconds, {});
       }
 
       const metric = findMetric(await harness.collect(), 'oficina.test.duration');
@@ -263,7 +255,7 @@ describe('OtelMetricsAdapter', () => {
       expect(point.positive.bucketCounts.filter((count) => count > 0)).toHaveLength(3);
     });
 
-    it('should register the views declared in the registry', () => {
+    it('should declare views only for the registry entries with a custom aggregation', () => {
       expect(METRIC_VIEWS.map((view) => view.instrumentName)).toEqual(['oficina.test.duration']);
     });
   });

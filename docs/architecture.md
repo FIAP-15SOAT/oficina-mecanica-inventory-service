@@ -9,6 +9,7 @@ Visão do Inventory Service como está no repositório. As decisões estão nas 
 - [Mensageria com outbox](#mensageria-com-outbox)
 - [Cache do dono](#cache-do-dono)
 - [Autenticação e Swagger](#autenticação-e-swagger)
+- [Exceções por camada](#exceções-por-camada)
 - [Modelo C4](#modelo-c4)
 
 ## Camadas
@@ -63,6 +64,10 @@ A porta `ICache` (`get`, `set` com TTL, `delete(keys[])`) tem o adaptador `Valke
 - O guard global (`AuthenticationGuard`) exige o token de funcionário em toda rota, exceto as marcadas com `@Public()` (os health checks). A validação é local, RS256, com `STAFF_JWT_PUBLIC_KEY`, `kid`, `iss`, `aud`, `exp` e `typ`, sem consultar o Identity. O serviço não recebe a chave do token de cliente: token de cliente falha na assinatura e responde 401.
 - O Swagger (`/api/docs` e `/api/docs-json`) é montado pelo `SwaggerModule.setup` direto no Express, **fora do router do Nest e do guard**: por isso responde sem token. É isso que permite ao DAST ler `/api/docs-json` sem credencial e ao Postman abri-lo sem token. A UI declara o esquema Bearer `access-token` para testar rotas protegidas.
 - Toda chamada interna leva `x-request-id` e `traceparent`.
+
+## Exceções por camada
+
+Cada camada tem a própria hierarquia de exceções e um `APP_FILTER` global que a traduz em status HTTP: domínio, aplicação, infraestrutura e o `AllExceptionsFilter` para o resto. O corpo de erro é o mesmo em todos os serviços, `{statusCode, error, message}` com a mensagem em português, e nunca carrega stack, host ou texto do driver.
 
 ## Modelo C4
 
