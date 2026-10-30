@@ -15,6 +15,7 @@ import { PartSupplyController as PartSupplyCleanController } from '@interface-ad
 import { PartSupplyController } from './part-supply.controller';
 
 @Module({
+  exports: [PartSupplyCleanController],
   controllers: [PartSupplyController],
   providers: [
     {

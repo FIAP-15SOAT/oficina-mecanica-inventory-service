@@ -19,6 +19,7 @@ import { CacheModule } from './infrastructure/cache/cache.module';
 import { ServiceModule } from './infrastructure/http/controllers/service/service.module';
 import { PartSupplyModule } from './infrastructure/http/controllers/part-supply/part-supply.module';
 import { StockModule } from './infrastructure/http/controllers/stock/stock.module';
+import { InternalCatalogModule } from './infrastructure/http/controllers/internal/internal-catalog.module';
 import { ClientsModule } from './infrastructure/clients/clients.module';
 
 @Module({
@@ -36,6 +37,7 @@ import { ClientsModule } from './infrastructure/clients/clients.module';
     ServiceModule,
     PartSupplyModule,
     StockModule,
+    InternalCatalogModule,
   ],
   providers: [
     {

@@ -12,6 +12,7 @@ import { ServiceController as ServiceCleanController } from '@interface-adapters
 import { ServiceController } from './service.controller';
 
 @Module({
+  exports: [ServiceCleanController],
   controllers: [ServiceController],
   providers: [
     {
