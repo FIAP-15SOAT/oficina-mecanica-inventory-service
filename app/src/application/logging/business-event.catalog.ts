@@ -23,6 +23,14 @@ export const BUSINESS_EVENTS = {
     message: 'stock reserved for the work order',
     level: 'info',
   }),
+  STOCK_CONSUMED: defineLogEvent<{
+    workOrderId: string;
+    consumedItemCount: number;
+  }>({
+    name: 'stock.consumed',
+    message: 'reserved stock consumed for the work order',
+    level: 'info',
+  }),
   STOCK_RESERVATION_FAILED: defineLogEvent<{
     workOrderId: string;
     quoteId: string;

@@ -9,6 +9,7 @@ export type LogicalFieldName =
   | 'reservedItemCount'
   | 'reservedQuantity'
   | 'missingItemCount'
+  | 'consumedItemCount'
   | 'port'
   | 'signal'
   | 'dependencyName'

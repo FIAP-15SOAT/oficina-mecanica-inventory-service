@@ -7,6 +7,8 @@ import { MessageEnvelope } from '@application/messaging/message-envelope';
 import { IReserveStockUseCase } from '@application/ports/input/stock/reserve-stock.use-case.interface';
 import { ReserveStockHandler } from '@infrastructure/messaging/handlers/reserve-stock.handler';
 import { ReserveStockPayload } from '@infrastructure/messaging/handlers/reserve-stock.payload';
+import { ConsumeReservedStockHandler } from '@infrastructure/messaging/handlers/consume-reserved-stock.handler';
+import { ConsumeReservedStockPayload } from '@infrastructure/messaging/handlers/consume-reserved-stock.payload';
 import { MessageHandlerRegistry } from '@infrastructure/messaging/message-handler.registry';
 import { StockMessagingModule } from '@infrastructure/messaging/stock-messaging.module';
 
@@ -98,13 +100,27 @@ describe('ReserveStockPayload', () => {
 describe('StockMessagingModule', () => {
   it('registers on init for inventory.stock.reserve', () => {
     const registry = new MessageHandlerRegistry();
-    const handler = new ReserveStockHandler({ execute: jest.fn() });
+    const reserve = new ReserveStockHandler({ execute: jest.fn() });
+    const consume = new ConsumeReservedStockHandler({ execute: jest.fn() });
 
-    new StockMessagingModule(registry, handler).onModuleInit();
+    new StockMessagingModule(registry, reserve, consume).onModuleInit();
 
     expect(registry.find('inventory.stock.reserve')).toEqual({
-      handler: handler.handle,
+      handler: reserve.handle,
       payloadClass: ReserveStockPayload,
+    });
+  });
+
+  it('registers on init for inventory.stock.consume', () => {
+    const registry = new MessageHandlerRegistry();
+    const reserve = new ReserveStockHandler({ execute: jest.fn() });
+    const consume = new ConsumeReservedStockHandler({ execute: jest.fn() });
+
+    new StockMessagingModule(registry, reserve, consume).onModuleInit();
+
+    expect(registry.find('inventory.stock.consume')).toEqual({
+      handler: consume.handle,
+      payloadClass: ConsumeReservedStockPayload,
     });
   });
 });
