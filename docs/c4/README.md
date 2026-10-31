@@ -43,7 +43,7 @@ docker run --rm -i plantuml/plantuml:latest -tpng -pipe < inventory-component.pu
 | Outbox Relay | A cada 500 ms publica até 10 linhas no SNS com `MessageGroupId` = `workOrderId` ou `messageId`, sob advisory lock |
 | Consumidor SQS | Lê `inventory.fifo`, valida o envelope e o payload e despacha ao handler pelo `type` |
 | Adaptador de cache | `ICache` com `ValkeyCacheAdapter`, cache-aside que degrada para o banco |
-| Cliente HTTP interno | `IInternalHttpClient` para rotas `/internal/...` de outros serviços, com `x-request-id` |
+| Cliente HTTP interno | `InternalHttpClient`, transporte dos gateways para rotas `/internal/...` de outros serviços, com `x-request-id` |
 | Logging e telemetria | Logs JSON no stdout e traces e métricas pelo OpenTelemetry |
 
 Convenção: a tecnologia ou o protocolo aparece nas setas que cruzam a fronteira do serviço.

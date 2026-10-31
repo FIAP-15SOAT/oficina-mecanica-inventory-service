@@ -22,7 +22,7 @@ rectangle "Inventory Service [Container: NestJS 12]" {
   component "Outbox Relay\n[OutboxRelayService, 500 ms, advisory lock]" as relay
   component "Consumidor SQS\n[SqsConsumerService + MessageHandlerRegistry]" as consumer
   component "Adaptador de cache\n[ICache + ValkeyCacheAdapter]" as cache
-  component "Cliente HTTP interno\n[IInternalHttpClient, /internal]" as internal
+  component "Cliente HTTP interno\n[InternalHttpClient, /internal]" as internal
   component "Logging e telemetria\n[pino, OpenTelemetry]" as obs
 }
 

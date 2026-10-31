@@ -6,7 +6,7 @@ import { UserRole } from '@domain/enums/user-role.enum';
 import { CurrentPrincipal } from '@infrastructure/http/decorators/current-principal.decorator';
 import { Roles } from '@infrastructure/http/decorators/roles.decorator';
 import { RolesGuard } from '@infrastructure/http/guards/roles.guard';
-import type { AuthenticatedPrincipal } from '@application/ports/output/authenticated-principal';
+import type { AuthenticatedPrincipal } from '@application/auth/authenticated-principal';
 
 import { signTestStaffToken } from '../helpers/staff-jwt.helper';
 import { TestContext, setupTestApp, teardownTestApp } from '../helpers/test-app.helper';

@@ -18,7 +18,7 @@ import { IsEmail, IsIn, IsInt, IsNumber, IsString, Length, Min, MinLength } from
 import request from 'supertest';
 
 import { defineLogEvent } from '@application/logging/log-event';
-import type { ILogger } from '@application/ports/output/logger.service.interface';
+import type { ILogger } from '@application/ports/output/services/logger.service.interface';
 import { UserRole } from '@domain/enums/user-role.enum';
 import { Public } from '@infrastructure/http/decorators/public.decorator';
 import { Roles } from '@infrastructure/http/decorators/roles.decorator';
