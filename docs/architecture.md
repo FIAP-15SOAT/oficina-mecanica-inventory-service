@@ -19,7 +19,7 @@ Clean Architecture com regra de dependência única: o código aponta só para d
 | Camada | Pasta (`app/src/`) | Conteúdo hoje | Pode importar |
 | --- | --- | --- | --- |
 | Domínio | `domain/` | Catálogo tipado de mensagens (`messaging/`), exceções de domínio, portas de repositório (`IOutboxRepository`, `IUnitOfWork`), enum de papéis | Nada de `@nestjs/*`, Prisma nem `@opentelemetry/*` |
-| Aplicação | `application/` | Portas de saída (`ICache`, `ILogger`, `IMetrics`, `IInternalHttpClient`), envelope de mensagem, exceções, catálogos de log e de métricas | Idem |
+| Aplicação | `application/` | Portas de saída em `ports/output/services/` (`ICache`, `ILogger`, `IMetrics`) e `ports/output/gateways/<dono>/`, o principal autenticado em `auth/`, envelope de mensagem, exceções, catálogos de log e de métricas | Idem |
 | Adaptadores de interface | `interface-adapters/` | Clean Controllers e Presenters (ainda vazio: não há rota de negócio) | Idem |
 | Infraestrutura | `infrastructure/` | Borda HTTP do NestJS, Prisma, mensageria, cache, cliente HTTP interno, logging, telemetria, health | Tudo; só `infrastructure/persistence/prisma/` importa o Prisma |
 

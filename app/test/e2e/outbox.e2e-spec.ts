@@ -12,7 +12,7 @@ import {
   SQSClient,
 } from '@aws-sdk/client-sqs';
 
-import { ILogger } from '@application/ports/output/logger.service.interface';
+import { ILogger } from '@application/ports/output/services/logger.service.interface';
 import { IUnitOfWork } from '@domain/interfaces/repositories/unit-of-work.interface';
 import {
   OUTBOX_POLL_INTERVAL_MS,
