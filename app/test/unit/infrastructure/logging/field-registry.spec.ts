@@ -7,9 +7,11 @@ import {
   isDeclaredField,
   LOGICAL_FIELDS,
 } from '@infrastructure/logging/field-registry';
+import { BUSINESS_EVENTS } from '@application/logging/business-event.catalog';
 import { TECHNICAL_EVENTS } from '@infrastructure/logging/technical-event.catalog';
 
 const CATALOGS: Record<string, LogEventDefinition<LogFields>> = {
+  ...(BUSINESS_EVENTS as unknown as Record<string, LogEventDefinition<LogFields>>),
   ...(TECHNICAL_EVENTS as unknown as Record<string, LogEventDefinition<LogFields>>),
 };
 
@@ -20,6 +22,7 @@ type FieldsOf<TDefinition> =
 type BindingFieldName = 'workOrderId';
 
 type CatalogFieldName =
+  | FieldsOf<(typeof BUSINESS_EVENTS)[keyof typeof BUSINESS_EVENTS]>
   | FieldsOf<(typeof TECHNICAL_EVENTS)[keyof typeof TECHNICAL_EVENTS]>
   | BindingFieldName;
 

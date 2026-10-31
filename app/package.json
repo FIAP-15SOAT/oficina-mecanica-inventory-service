@@ -26,6 +26,8 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:migrate:prod": "prisma migrate deploy",
+    "prisma:seed": "prisma db seed",
+    "db:setup": "prisma migrate deploy && prisma generate && prisma db seed",
     "prisma:studio": "prisma studio"
   },
   "dependencies": {
@@ -69,7 +71,9 @@
     "proxy-addr": "^2.0.7",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
-    "sqs-consumer": "^15.0.4"
+    "sqs-consumer": "^15.0.4",
+    "tsx": "^4.23.15",
+    "uuid": "^8.3.2"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",
@@ -88,6 +92,7 @@
     "@types/passport-jwt": "^4.0.1",
     "@types/proxy-addr": "^2.0.3",
     "@types/supertest": "^7.0.0",
+    "@types/uuid": "^8.3.4",
     "eslint": "^9.18.0",
     "eslint-config-prettier": "^10.0.1",
     "eslint-plugin-prettier": "^5.2.2",

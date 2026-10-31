@@ -28,14 +28,14 @@ Jest com Supertest e **Testcontainers** em `app/test/e2e/`, sem mocks de infraes
 npm run test:e2e
 ```
 
-Suítes atuais: autenticação (guard e estratégia RS256), health (incluindo banco e cache indisponíveis e encerramento gracioso), logging, telemetria, filtro de exceções, outbox (relay e `MessageGroupId`) e mensageria (consumo, DLQ e propagação de contexto). O token de teste é assinado por `app/test/helpers/staff-jwt.helper.ts` com um par RS256 gerado em memória a cada execução; nenhuma chave é versionada.
+Suítes atuais: autenticação (guard e estratégia RS256), health (incluindo banco e cache indisponíveis e encerramento gracioso), logging, telemetria, filtro de exceções, outbox (relay e `MessageGroupId`), mensageria (consumo, DLQ e propagação de contexto) e as de negócio (serviços, peças, estoque, rotas internas e mensageria de estoque). O token de teste é assinado por `app/test/helpers/staff-jwt.helper.ts` com um par RS256 gerado em memória a cada execução; nenhuma chave é versionada.
 
 ## Por que os e2e do kit têm rotas de teste
 
-O serviço ainda não tem rota de negócio, mas os comportamentos do kit (autenticação deny-by-default, formato dos erros, log de acesso, traces, encerramento com requisição em andamento) só aparecem numa requisição que passe pelo router, pelos guards, pelos filtros e pelos interceptors. Cada suíte declara no próprio spec um controller que existe só no teste (por exemplo `AuthGuardProbeController` e `TestExceptionController`) e o monta por `setupTestApp({ controllers })`, ao lado do `AppModule`. Assim:
+As rotas de negócio têm os próprios e2e (serviços, peças, estoque, rotas internas e mensageria de estoque), mas os comportamentos do kit (autenticação deny-by-default, formato dos erros, log de acesso, traces, encerramento com requisição em andamento) só aparecem numa requisição que passe pelo router, pelos guards, pelos filtros e pelos interceptors. Cada suíte declara no próprio spec um controller que existe só no teste (por exemplo `AuthGuardProbeController` e `TestExceptionController`) e o monta por `setupTestApp({ controllers })`, ao lado do `AppModule`. Assim:
 
 - o código de produção não ganha rota nenhuma só para ser testado;
-- o padrão é permanente: quando chegarem as rotas de negócio, os specs do kit continuam iguais e não passam a depender das regras delas;
+- o padrão é permanente: os specs do kit continuam iguais e não dependem das regras de negócio;
 - um defeito do kit aponta para o kit, não para uma regra de negócio.
 
 ## Node 24
@@ -53,10 +53,12 @@ O `engines` do `package.json` exige `node >=24.9`, e o CI roda no Node 24.
 
 ## Postman e Newman
 
-Em [`collections/`](../collections) há a collection `inventory-collection.json` e o environment `inventory-environment.json` (Postman v2.1), com os health checks e o Swagger. A `baseUrl` é única: `http://localhost:3003`. Importe os dois no Postman ou rode com Newman contra o stack local:
+Em [`collections/`](../collections) há a collection `inventory-collection.json` e o environment `inventory-environment.json` (Postman v2.1), com health, Swagger, serviços, peças e insumos, movimentações e reservas, validações e as rotas internas. A `baseUrl` é única (`http://localhost:3003`) e a variável `authToken` guarda o token de funcionário `ADMIN`, que você assina com o par RS256 cuja chave pública foi para o `.env` (veja [Como executar localmente](local-setup.md#chave-pública-do-token-de-funcionário)); a collection manda `Authorization: Bearer {{authToken}}`, e só os casos 401 e as rotas internas dispensam o token. Os ids criados pelas requisições ficam no environment durante a execução.
+
+As exclusões esperam 204, então precisam do dono dos orçamentos respondendo em `QUOTE_ITEMS_SERVICE_URL` (veja [Como executar localmente](local-setup.md#api-na-máquina)). Reserva e baixa não têm rota HTTP e são cobertas pelo e2e de mensageria. Importe os dois arquivos no Postman ou rode com Newman contra o stack local:
 
 ```bash
 # Subir o stack (a partir de app/) e rodar a collection
 docker compose up -d --build --wait
-npx --yes newman run ../collections/inventory-collection.json -e ../collections/inventory-environment.json
+npx --yes newman run ../collections/inventory-collection.json -e ../collections/inventory-environment.json --env-var authToken=<token ADMIN>
 ```

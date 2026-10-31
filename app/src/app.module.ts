@@ -16,7 +16,12 @@ import { PrismaModule } from './infrastructure/persistence/prisma/prisma.module'
 import { HealthModule } from './infrastructure/http/controllers/health/health.module';
 import { MessagingModule } from './infrastructure/messaging/messaging.module';
 import { CacheModule } from './infrastructure/cache/cache.module';
+import { ServiceModule } from './infrastructure/http/controllers/service/service.module';
+import { PartSupplyModule } from './infrastructure/http/controllers/part-supply/part-supply.module';
+import { StockModule } from './infrastructure/http/controllers/stock/stock.module';
+import { InternalCatalogModule } from './infrastructure/http/controllers/internal/internal-catalog.module';
 import { ClientsModule } from './infrastructure/clients/clients.module';
+import { StockMessagingModule } from './infrastructure/messaging/stock-messaging.module';
 
 @Module({
   imports: [
@@ -30,6 +35,11 @@ import { ClientsModule } from './infrastructure/clients/clients.module';
     CacheModule,
     ClientsModule,
     HealthModule,
+    ServiceModule,
+    PartSupplyModule,
+    StockModule,
+    InternalCatalogModule,
+    StockMessagingModule,
   ],
   providers: [
     {

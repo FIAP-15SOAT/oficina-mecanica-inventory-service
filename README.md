@@ -21,19 +21,32 @@ Serviço NestJS da solução Oficina Mecânica (FIAP 15SOAT), dono do contexto d
 ### Responsabilidade do Inventory
 
 - Dono do catálogo de serviços, peças e insumos, do saldo, das reservas e das movimentações de estoque.
-- Consumirá da fila `inventory.fifo` os comandos `inventory.stock.reserve` e `inventory.stock.consume` e publicará `inventory.stock.reserved` e `inventory.stock.reservation_failed` no tópico `oficina-events.fifo`. A infraestrutura (consumidor, outbox e relay) já existe, ainda sem handler registrado.
+- Consome da fila `inventory.fifo` os comandos `inventory.stock.reserve` (reserva tudo ou nada, idempotente por ordem de serviço) e `inventory.stock.consume` (baixa das reservas) e publica `inventory.stock.reserved` e `inventory.stock.reservation_failed` no tópico `oficina-events.fifo`, sempre por outbox gravado na mesma transação. Detalhes em [Mensageria](docs/messaging.md).
+- Lê por id com cache-aside no Valkey (TTL de 12 h, invalidado depois do commit).
+- Antes de excluir um serviço ou uma peça, pergunta ao dono dos orçamentos (Work Order, `QUOTE_ITEMS_SERVICE_URL`) se o item está em uso.
 - Valida localmente o token RS256 de funcionário emitido pelo Identity e recusa token de cliente.
 
-### O que a API expõe hoje
+### O que a API expõe
 
-Só o que o esqueleto entrega: `GET /api/health/live`, `GET /api/health/ready` e o Swagger em `/api/docs` e `/api/docs-json`. Não há rota de negócio ainda.
+Rotas de negócio em `/api`, todas com token de funcionário; o contrato completo está em [Referência da API](docs/api.md).
+
+| Recurso | Rotas | Papéis |
+| --- | --- | --- |
+| Serviços | `POST/GET /api/services`, `GET/PUT/DELETE /api/services/:id` | ADMIN (listagem também ATTENDANT e MECHANIC) |
+| Peças e insumos | `POST/GET /api/parts-supplies`, `GET/PUT/PATCH/DELETE /api/parts-supplies/:id` (`PATCH` movimenta o estoque) | ADMIN; listagem também ATTENDANT e MECHANIC; busca por id e `PATCH` também ATTENDANT |
+| Movimentações | `GET /api/stock-movements` | ADMIN, ATTENDANT |
+| Reservas | `GET /api/stock-reservations` | ADMIN, ATTENDANT |
+| Internas (sem token, só no cluster) | `GET /internal/services/:id`, `GET /internal/parts-supplies/:id` | n/a |
+| Saúde e Swagger | `GET /api/health/live`, `GET /api/health/ready`, `/api/docs`, `/api/docs-json` | Público |
+
+A reserva e a baixa de estoque só acontecem por mensagem, não por HTTP.
 
 ## Stack
 
 - **Runtime**: Node.js 24 + TypeScript 6
 - **Framework**: NestJS 12
 - **ORM**: Prisma 7 (driver `@prisma/adapter-pg`, client gerado em `app/prisma/generated/`)
-- **Banco de dados**: PostgreSQL 18 (schema com a tabela `outbox`)
+- **Banco de dados**: PostgreSQL 18 (catálogo, estoque, reservas, movimentações e `outbox`)
 - **Mensageria**: Amazon SNS FIFO + SQS FIFO (`@aws-sdk/client-sns`, `@aws-sdk/client-sqs`, `sqs-consumer`) com outbox transacional; LocalStack 4.14.0 em desenvolvimento
 - **Cache**: Valkey 9.1 (ElastiCache no cluster) via `ioredis`, cache-aside
 - **Autenticação**: token de funcionário RS256 validado localmente com `passport-jwt`
@@ -84,6 +97,8 @@ curl -i http://localhost:3003/api/health/ready
 docker compose down -v
 ```
 
+A exclusão de serviço ou peça consulta o Work Order em `QUOTE_ITEMS_SERVICE_URL`; o compose já aponta para `http://host.docker.internal:3000` (o Work Order rodando na máquina) e, sem ele no ar, a exclusão responde 503 ([detalhes](docs/local-setup.md#api-na-máquina)). Para popular o catálogo local, rode `npm run db:setup` a partir de `app/` com a `DATABASE_URL` do `.env` (o banco do compose escuta em `localhost:5435`).
+
 Depois do `up`, a API responde em `http://localhost:3003` e o Swagger em [`http://localhost:3003/api/docs`](http://localhost:3003/api/docs). O passo a passo completo, com as portas dos demais serviços, está em [Como executar localmente](docs/local-setup.md).
 
 ## Comandos
@@ -104,6 +119,8 @@ Rode a partir de `app/`.
 | `npm run prisma:generate` | Gera o Prisma Client |
 | `npm run prisma:migrate` | Cria e aplica migrations (dev) |
 | `npm run prisma:migrate:prod` | Aplica migrations (`migrate deploy`) |
+| `npm run prisma:seed` | Carrega 25 serviços e 8 peças (`prisma db seed`, idempotente) |
+| `npm run db:setup` | `migrate deploy`, `prisma generate` e seed |
 
 ## Estrutura
 
@@ -111,14 +128,14 @@ Rode a partir de `app/`.
 oficina-mecanica-inventory-service/
 ├── app/
 │   ├── src/
-│   │   ├── domain/                 # catálogo de mensagens, exceções e portas de repositório
-│   │   ├── application/            # portas de saída, envelope, exceções, log e métricas
-│   │   ├── interface-adapters/     # Clean Controllers e Presenters (ainda vazio)
+│   │   ├── domain/                 # entidades, enums, catálogo de mensagens, exceções e portas de repositório
+│   │   ├── application/            # use cases (service, part-supply, stock), portas, chaves de cache, log e métricas
+│   │   ├── interface-adapters/     # Clean Controllers e Presenters (service, part-supply, stock)
 │   │   ├── infrastructure/         # http, persistence/prisma, messaging, cache, clients, logging, telemetry, health, config
 │   │   ├── app.module.ts
 │   │   ├── main.ts
 │   │   └── otel.ts                 # preload do OpenTelemetry
-│   ├── prisma/                     # schema e migrations (tabela outbox)
+│   ├── prisma/                     # schema, migrations e seeds
 │   ├── localstack/                 # init-topology.sh (tópico, filas e DLQs)
 │   ├── test/                       # unit/ (espelha src/), e2e/, smoke/ e helpers/
 │   ├── docker-compose.yml
@@ -129,7 +146,7 @@ oficina-mecanica-inventory-service/
 ├── docs/
 │   ├── adr/                        # decisões arquiteturais
 │   ├── c4/                         # C4 nível 3 em PlantUML
-│   └── diagrams/                   # diagramas dos pipelines
+│   └── diagrams/                   # arquitetura, sequência de estoque e pipelines
 ├── .github/workflows/              # CI, CD, SAST e DAST
 ├── .zap/rules.tsv                  # regras do OWASP ZAP
 └── README.md
@@ -139,12 +156,15 @@ oficina-mecanica-inventory-service/
 
 | Documento | Conteúdo |
 | --- | --- |
-| [Arquitetura](docs/architecture.md) | Camadas, kit herdado, mensageria com outbox, cache, Swagger e C4 nível 3 |
+| [Arquitetura](docs/architecture.md) | Camadas, agregados, reserva e baixa, mensageria com outbox, cache por id, consulta de uso, Swagger e C4 nível 3 |
+| [Referência da API](docs/api.md) | Rotas públicas e internas, papéis, erros e contrato de movimentos e reservas |
+| [Mensageria](docs/messaging.md) | Comandos consumidos, eventos publicados, payloads e idempotência |
+| [Banco de dados](docs/database.md) | Tabelas, índices, CHECK de saldo, cache e seed |
 | [Como executar localmente](docs/local-setup.md) | Setup, variáveis de ambiente e tabela de portas locais por contexto |
 | [Testes](docs/testing.md) | Unitários, E2E com Testcontainers, rotas de teste, Postman e Newman |
 | [CI/CD](docs/ci-cd.md) | Workflows de CI, CD, SAST e DAST |
 | [Modelo C4](docs/c4/README.md) | Componentes do serviço |
-| [Collection Postman](collections/inventory-collection.json) e [environment](collections/inventory-environment.json) | Health e Swagger com `baseUrl` única |
+| [Collection Postman](collections/inventory-collection.json) e [environment](collections/inventory-environment.json) | Health, Swagger, serviços, peças, estoque e rotas internas, com `baseUrl` única |
 | Swagger | `http://localhost:3003/api/docs` (local) e `http://localhost:3003/api/docs-json` |
 | [SonarQube Cloud](https://sonarcloud.io/project/overview?id=FIAP-15SOAT_oficina-mecanica-inventory-service) | Projeto `FIAP-15SOAT_oficina-mecanica-inventory-service` |
 

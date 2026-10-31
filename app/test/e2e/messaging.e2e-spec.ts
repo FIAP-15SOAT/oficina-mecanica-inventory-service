@@ -16,12 +16,14 @@ import {
   SetQueueAttributesCommand,
   SQSClient,
 } from '@aws-sdk/client-sqs';
+import { Module } from '@nestjs/common';
 import { IsArray, IsUUID } from 'class-validator';
 
 import { MessageEnvelope } from '@application/messaging/message-envelope';
 import { DECLARED_FIELD_NAMES } from '@infrastructure/logging/field-registry';
 import { MessageHandlerRegistry } from '@infrastructure/messaging/message-handler.registry';
 import { MAX_RECEIVE_COUNT } from '@infrastructure/messaging/sqs-consumer.service';
+import { StockMessagingModule } from '@infrastructure/messaging/stock-messaging.module';
 import { TestContext, setupTestApp, teardownTestApp } from '../helpers/test-app.helper';
 
 // The consumer long polls for 20 s and LocalStack does not always wake that poll when a message
@@ -37,6 +39,10 @@ class StockReservePayload {
   @IsArray()
   items!: unknown[];
 }
+
+// Stands in for the service's stock handlers, so this suite owns the handler registry.
+@Module({})
+class NoStockHandlersModule {}
 
 async function waitFor(
   condition: () => boolean | Promise<boolean>,
@@ -54,7 +60,7 @@ async function waitFor(
   }
 }
 
-// The service registers no handler yet. The suite registers one test handler for
+// The service's stock handlers are swapped out. The suite registers one test handler for
 // inventory.stock.reserve, routed by work order id, to prove processing, ack and FIFO order; every
 // other type has no handler and must stay in the queue until the redrive moves it to the DLQ.
 // Messages go straight to inventory.fifo (not through the topic), each test with its own group, so
@@ -79,7 +85,11 @@ describe('Messaging (E2E)', () => {
     // Registers the W3C propagator and the async context manager, as the preload does at runtime.
     tracerProvider.register();
 
-    ctx = await setupTestApp({ withMessaging: true, captureLogs: true });
+    ctx = await setupTestApp({
+      withMessaging: true,
+      captureLogs: true,
+      overrideModules: [[StockMessagingModule, NoStockHandlersModule]],
+    });
     sqs = ctx.app.get(SQSClient);
 
     ctx.app.get(MessageHandlerRegistry).register(

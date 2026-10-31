@@ -1,0 +1,16 @@
+{
+  "$source": "fixture provisória do endpoint do dono dos orçamentos: GET /internal/services/:serviceId/quote-items e GET /internal/parts-supplies/:partSupplyId/quote-items",
+  "$description": "Corpo 200 devolvido pelo dono dos orçamentos: lista não vazia = item em uso; lista vazia = livre. Usado nos specs do client e como resposta do dono nos e2e de exclusão.",
+  "inUse": {
+    "data": [
+      {
+        "quoteId": "3f6c2a1e-7b84-4d59-a0c3-5e9d1b8f2a47",
+        "workOrderId": "9a4e7d52-1c36-4b8f-8e05-2d7f3a6b1c90"
+      }
+    ]
+  },
+  "free": {
+    "data": []
+  },
+  "malformed": {}
+}
