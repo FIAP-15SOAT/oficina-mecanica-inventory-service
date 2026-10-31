@@ -25,8 +25,8 @@ Os papéis são `ADMIN`, `ATTENDANT` e `MECHANIC`.
 
 | Método | Rota | Descrição | Papéis | Respostas |
 | --- | --- | --- | --- | --- |
-| POST | `/` | Cadastrar serviço | ADMIN | 201, 400, 401, 403, 409 (nome repetido), 422 |
-| GET | `/` | Listar paginado (filtro `name`) | ADMIN, ATTENDANT, MECHANIC | 200, 401, 403 |
+| POST | `/` | Cadastrar serviço | ADMIN | 201, 400, 409 (nome repetido), 422 |
+| GET | `/` | Listar paginado (filtro `name`) | ADMIN, ATTENDANT, MECHANIC | 200 |
 | GET | `/:id` | Buscar por id | ADMIN | 200, 400 (id não UUID), 404 |
 | PUT | `/:id` | Atualizar | ADMIN | 200, 400, 404, 409, 422 |
 | DELETE | `/:id` | Excluir | ADMIN | 204, 400 (id não UUID), 404, 409 (em uso), 503 |
@@ -37,10 +37,10 @@ Corpo de `POST` e `PUT`: `name` (3 a 150 caracteres), `description` (opcional, a
 
 | Método | Rota | Descrição | Papéis | Respostas |
 | --- | --- | --- | --- | --- |
-| POST | `/` | Cadastrar peça ou insumo | ADMIN | 201, 400, 401, 403, 409 (SKU repetido), 422 |
-| GET | `/` | Consultar estoque paginado (filtros `name`, `sku`, `category`, `lowStock`) | ADMIN, ATTENDANT, MECHANIC | 200, 400 (filtro inválido), 401, 403 |
+| POST | `/` | Cadastrar peça ou insumo | ADMIN | 201, 400, 409 (SKU repetido), 422 |
+| GET | `/` | Consultar estoque paginado (filtros `name`, `sku`, `category`, `lowStock`) | ADMIN, ATTENDANT, MECHANIC | 200, 400 (filtro inválido) |
 | GET | `/:id` | Buscar por id (com cache) | ADMIN, ATTENDANT | 200, 400 (id não UUID), 404 |
-| PUT | `/:id` | Atualizar dados cadastrais (não altera saldo) | ADMIN | 200, 400, 404, 409 (SKU em uso), 422 |
+| PUT | `/:id` | Atualizar dados cadastrais (não altera saldo) | ADMIN | 200, 400, 404, 409 (SKU em uso ou conflito de versão), 422 |
 | PATCH | `/:id` | Movimentar estoque manualmente | ADMIN, ATTENDANT | 200, 400, 404, 409 |
 | DELETE | `/:id` | Excluir | ADMIN | 204, 400 (id não UUID), 404, 409, 503 |
 
