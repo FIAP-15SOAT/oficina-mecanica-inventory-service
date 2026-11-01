@@ -6,7 +6,7 @@ import { ICreatePartSupplyUseCase } from '@application/ports/input/part-supply/c
 import { CreatePartSupplyDto } from '@application/ports/input/part-supply/dto/create-part-supply.dto';
 import { ResourceConflictException } from '@application/exceptions/resource-conflict.exception';
 import { inventoryCacheKeys } from '@application/keys/inventory-cache-keys';
-import { ICache } from '@application/ports/output/cache.service.interface';
+import { ICache } from '@application/ports/output/services/cache.service.interface';
 
 export class CreatePartSupplyUseCase implements ICreatePartSupplyUseCase {
   constructor(

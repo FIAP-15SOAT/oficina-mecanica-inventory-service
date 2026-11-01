@@ -7,9 +7,9 @@ import {
   ReserveStockInput,
   ReserveStockOutcome,
 } from '@application/ports/input/stock/reserve-stock.use-case.interface';
-import { ICache } from '@application/ports/output/cache.service.interface';
-import { ILogger } from '@application/ports/output/logger.service.interface';
-import { IMetrics } from '@application/ports/output/metrics.service.interface';
+import { ICache } from '@application/ports/output/services/cache.service.interface';
+import { ILogger } from '@application/ports/output/services/logger.service.interface';
+import { IMetrics } from '@application/ports/output/services/metrics.service.interface';
 import { BUSINESS_EVENTS } from '@application/logging/business-event.catalog';
 import { BUSINESS_METRICS } from '@application/metrics/business-metric.catalog';
 import { inventoryCacheKeys } from '@application/keys/inventory-cache-keys';

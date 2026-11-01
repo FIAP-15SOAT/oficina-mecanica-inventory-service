@@ -10,7 +10,7 @@ import {
   CachedPartSupply,
   PartSupplyCacheMapper,
 } from '@application/mappers/part-supply-cache.mapper';
-import { ICache } from '@application/ports/output/cache.service.interface';
+import { ICache } from '@application/ports/output/services/cache.service.interface';
 
 export class FindPartSupplyByIdUseCase implements IFindPartSupplyByIdUseCase {
   constructor(

@@ -4,8 +4,8 @@ import { UpdateStockUseCase } from '@application/use-cases/part-supply/update-st
 import { ResourceNotFoundException } from '@application/exceptions/resource-not-found.exception';
 import { BUSINESS_EVENTS } from '@application/logging/business-event.catalog';
 import { inventoryCacheKeys } from '@application/keys/inventory-cache-keys';
-import { ICache } from '@application/ports/output/cache.service.interface';
-import { ILogger } from '@application/ports/output/logger.service.interface';
+import { ICache } from '@application/ports/output/services/cache.service.interface';
+import { ILogger } from '@application/ports/output/services/logger.service.interface';
 import { StockMovementType } from '@domain/enums/stock-movement-type.enum';
 import { BusinessRuleViolationException } from '@domain/exceptions/business-rule-violation.exception';
 import { IUnitOfWork } from '@domain/interfaces/repositories/unit-of-work.interface';

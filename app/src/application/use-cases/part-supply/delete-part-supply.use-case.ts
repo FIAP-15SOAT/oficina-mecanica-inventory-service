@@ -2,7 +2,7 @@ import { ResourceNotFoundException } from '@application/exceptions/resource-not-
 import { ResourceConflictException } from '@application/exceptions/resource-conflict.exception';
 import { IPartSupplyRepository } from '@domain/interfaces/repositories/part-supply.repository.interface';
 import { inventoryCacheKeys } from '@application/keys/inventory-cache-keys';
-import { ICache } from '@application/ports/output/cache.service.interface';
+import { ICache } from '@application/ports/output/services/cache.service.interface';
 import { IQuoteItemUsageClient } from '@application/ports/output/quote-item-usage-client.interface';
 import { IDeletePartSupplyUseCase } from '@application/ports/input/part-supply/delete-part-supply.use-case.interface';
 

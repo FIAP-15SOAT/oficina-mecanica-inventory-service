@@ -4,7 +4,7 @@ import { ResourceConflictException } from '@application/exceptions/resource-conf
 import { PartSupplyCategory } from '@domain/enums/part-supply-category.enum';
 import { Unit } from '@domain/enums/unit.enum';
 import { inventoryCacheKeys } from '@application/keys/inventory-cache-keys';
-import { ICache } from '@application/ports/output/cache.service.interface';
+import { ICache } from '@application/ports/output/services/cache.service.interface';
 import { IPartSupplyRepository } from '@domain/interfaces/repositories/part-supply.repository.interface';
 import { UpdatePartSupplyDto } from '@application/ports/input/part-supply/dto/update-part-supply.dto';
 import { createMockCache } from '../../../../helpers/cache-mock.factory';

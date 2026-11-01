@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 
 import { ConsumeReservedStockUseCase } from '@application/use-cases/stock/consume-reserved-stock.use-case';
-import { ICache } from '@application/ports/output/cache.service.interface';
+import { ICache } from '@application/ports/output/services/cache.service.interface';
 import { IUnitOfWork } from '@domain/interfaces/repositories/unit-of-work.interface';
 import { ConcurrencyException } from '@infrastructure/exceptions/concurrency.exception';
 import { cleanDatabase } from '../helpers/db-cleanup.helper';

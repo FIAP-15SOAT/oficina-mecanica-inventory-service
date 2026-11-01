@@ -3,8 +3,8 @@ import { join } from 'node:path';
 
 import { ConfigService } from '@nestjs/config';
 
-import { ILogger } from '@application/ports/output/logger.service.interface';
-import { IInternalHttpClient } from '@application/ports/output/internal-http-client.interface';
+import { ILogger } from '@application/ports/output/services/logger.service.interface';
+import { InternalHttpClient } from '@infrastructure/clients/internal-http-client';
 import { ServiceRequestRejectedException } from '@application/exceptions/service-request-rejected.exception';
 import { QuoteItemUsageClient } from '@infrastructure/clients/quote-item-usage.client';
 import { ServiceIntegrationException } from '@infrastructure/exceptions/service-integration.exception';
@@ -21,7 +21,7 @@ const UNAVAILABLE_MESSAGE =
   'Não foi possível confirmar se o item é usado em orçamentos; nada foi excluído, tente novamente mais tarde';
 
 describe('QuoteItemUsageClient', () => {
-  let http: jest.Mocked<IInternalHttpClient>;
+  let http: jest.Mocked<InternalHttpClient>;
   let logger: jest.Mocked<ILogger>;
   let client: QuoteItemUsageClient;
 
@@ -29,7 +29,7 @@ describe('QuoteItemUsageClient', () => {
     new QuoteItemUsageClient(http, new ConfigService({ QUOTE_ITEMS_SERVICE_URL: url }), logger);
 
   beforeEach(() => {
-    http = { request: jest.fn() };
+    http = { request: jest.fn() } as unknown as jest.Mocked<InternalHttpClient>;
     logger = createMockLogger();
     client = build();
   });

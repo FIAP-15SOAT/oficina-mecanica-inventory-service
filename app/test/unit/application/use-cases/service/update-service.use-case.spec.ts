@@ -3,7 +3,7 @@ import { ResourceNotFoundException } from '@application/exceptions/resource-not-
 import { UpdateServiceUseCase } from '@application/use-cases/service/update-service.use-case';
 import { UpdateServiceDto } from '@application/ports/input/service/dto/update-service.dto';
 import { inventoryCacheKeys } from '@application/keys/inventory-cache-keys';
-import { ICache } from '@application/ports/output/cache.service.interface';
+import { ICache } from '@application/ports/output/services/cache.service.interface';
 import { IServiceRepository } from '@domain/interfaces/repositories/service.repository.interface';
 import { createMockCache } from '../../../../helpers/cache-mock.factory';
 import {

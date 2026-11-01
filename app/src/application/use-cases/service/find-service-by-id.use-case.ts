@@ -6,7 +6,7 @@ import {
   inventoryCacheKeys,
 } from '@application/keys/inventory-cache-keys';
 import { CachedService, ServiceCacheMapper } from '@application/mappers/service-cache.mapper';
-import { ICache } from '@application/ports/output/cache.service.interface';
+import { ICache } from '@application/ports/output/services/cache.service.interface';
 
 export class FindServiceByIdUseCase {
   constructor(

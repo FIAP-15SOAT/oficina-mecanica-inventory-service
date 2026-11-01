@@ -4,9 +4,9 @@ import { ReserveStockUseCase } from '@application/use-cases/stock/reserve-stock.
 import { BUSINESS_EVENTS } from '@application/logging/business-event.catalog';
 import { BUSINESS_METRICS } from '@application/metrics/business-metric.catalog';
 import { inventoryCacheKeys } from '@application/keys/inventory-cache-keys';
-import { ICache } from '@application/ports/output/cache.service.interface';
-import { ILogger } from '@application/ports/output/logger.service.interface';
-import { IMetrics } from '@application/ports/output/metrics.service.interface';
+import { ICache } from '@application/ports/output/services/cache.service.interface';
+import { ILogger } from '@application/ports/output/services/logger.service.interface';
+import { IMetrics } from '@application/ports/output/services/metrics.service.interface';
 import { PartSupply } from '@domain/entities/part-supply.entity';
 import { StockReservation } from '@domain/entities/stock-reservation.entity';
 import { IUnitOfWork } from '@domain/interfaces/repositories/unit-of-work.interface';

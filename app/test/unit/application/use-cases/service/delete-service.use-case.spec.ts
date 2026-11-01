@@ -3,7 +3,7 @@ import { ResourceConflictException } from '@application/exceptions/resource-conf
 import { ResourceNotFoundException } from '@application/exceptions/resource-not-found.exception';
 import { ServiceRequestRejectedException } from '@application/exceptions/service-request-rejected.exception';
 import { inventoryCacheKeys } from '@application/keys/inventory-cache-keys';
-import { ICache } from '@application/ports/output/cache.service.interface';
+import { ICache } from '@application/ports/output/services/cache.service.interface';
 import { IQuoteItemUsageClient } from '@application/ports/output/quote-item-usage-client.interface';
 import { IServiceRepository } from '@domain/interfaces/repositories/service.repository.interface';
 import { ServiceIntegrationException } from '@infrastructure/exceptions/service-integration.exception';

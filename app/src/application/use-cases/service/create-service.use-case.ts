@@ -3,7 +3,7 @@ import { IServiceRepository } from '@domain/interfaces/repositories/service.repo
 import { CreateServiceDto } from '@application/ports/input/service/dto/create-service.dto';
 import { ResourceConflictException } from '@application/exceptions/resource-conflict.exception';
 import { inventoryCacheKeys } from '@application/keys/inventory-cache-keys';
-import { ICache } from '@application/ports/output/cache.service.interface';
+import { ICache } from '@application/ports/output/services/cache.service.interface';
 
 export class CreateServiceUseCase {
   constructor(

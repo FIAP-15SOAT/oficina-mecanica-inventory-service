@@ -1,10 +1,11 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
+import { InternalHttpClient } from './internal-http-client';
+
 import { ServiceRequestRejectedException } from '@application/exceptions/service-request-rejected.exception';
-import { IInternalHttpClient } from '@application/ports/output/internal-http-client.interface';
 import { IQuoteItemUsageClient } from '@application/ports/output/quote-item-usage-client.interface';
-import { ILogger } from '@application/ports/output/logger.service.interface';
+import { ILogger } from '@application/ports/output/services/logger.service.interface';
 import { ServiceIntegrationException } from '@infrastructure/exceptions/service-integration.exception';
 import { TECHNICAL_EVENTS } from '@infrastructure/logging/technical-event.catalog';
 
@@ -16,7 +17,7 @@ export class QuoteItemUsageClient implements IQuoteItemUsageClient {
   private readonly baseUrl: string;
 
   constructor(
-    @Inject('IInternalHttpClient') private readonly http: IInternalHttpClient,
+    private readonly http: InternalHttpClient,
     config: ConfigService,
     @Inject('ILogger') private readonly logger: ILogger,
   ) {

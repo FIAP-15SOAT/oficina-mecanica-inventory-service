@@ -13,7 +13,7 @@ O Inventory vai concentrar regras de estoque (saldo, reservas, baixa) que precis
 Clean Architecture com quatro camadas e regra de dependência única (o código aponta só para dentro):
 
 - `domain/`: regras e invariantes, catálogo de mensagens e portas de repositório;
-- `application/`: casos de uso, portas de entrada e de saída (`ICache`, `ILogger`, `IInternalHttpClient`);
+- `application/`: casos de uso, portas de entrada e de saída (`ICache`, `ILogger` e os gateways dos outros serviços);
 - `interface-adapters/`: Clean Controllers e Presenters, POJOs sem decorators do NestJS;
 - `infrastructure/`: borda HTTP do NestJS, Prisma, mensageria, cache, logging, telemetria e health.
 

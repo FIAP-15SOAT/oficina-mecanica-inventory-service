@@ -7,7 +7,7 @@ import { FindServiceByIdUseCase } from '@application/use-cases/service/find-serv
 import { FindAllServicesPaginatedUseCase } from '@application/use-cases/service/find-all-services-paginated.use-case';
 
 import { IServiceRepository } from '@domain/interfaces/repositories/service.repository.interface';
-import { ICache } from '@application/ports/output/cache.service.interface';
+import { ICache } from '@application/ports/output/services/cache.service.interface';
 import { IQuoteItemUsageClient } from '@application/ports/output/quote-item-usage-client.interface';
 
 import { ServiceController as ServiceCleanController } from '@interface-adapters/service/service.controller';

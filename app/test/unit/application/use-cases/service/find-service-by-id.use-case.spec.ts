@@ -4,7 +4,7 @@ import {
   inventoryCacheKeys,
 } from '@application/keys/inventory-cache-keys';
 import { ServiceCacheMapper } from '@application/mappers/service-cache.mapper';
-import { ICache } from '@application/ports/output/cache.service.interface';
+import { ICache } from '@application/ports/output/services/cache.service.interface';
 import { FindServiceByIdUseCase } from '@application/use-cases/service/find-service-by-id.use-case';
 import { IServiceRepository } from '@domain/interfaces/repositories/service.repository.interface';
 import { createMockCache } from '../../../../helpers/cache-mock.factory';

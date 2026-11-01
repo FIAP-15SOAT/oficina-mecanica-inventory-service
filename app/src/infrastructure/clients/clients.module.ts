@@ -8,9 +8,9 @@ import { QuoteItemUsageClient } from './quote-item-usage.client';
 @Module({
   imports: [HttpModule],
   providers: [
-    { provide: 'IInternalHttpClient', useClass: InternalHttpClient },
+    InternalHttpClient,
     { provide: 'IQuoteItemUsageClient', useClass: QuoteItemUsageClient },
   ],
-  exports: ['IInternalHttpClient', 'IQuoteItemUsageClient'],
+  exports: [InternalHttpClient, 'IQuoteItemUsageClient'],
 })
 export class ClientsModule {}

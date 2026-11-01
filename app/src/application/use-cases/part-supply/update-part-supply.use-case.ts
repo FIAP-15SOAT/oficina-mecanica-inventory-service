@@ -4,7 +4,7 @@ import { PartSupply } from '@domain/entities/part-supply.entity';
 import { IPartSupplyRepository } from '@domain/interfaces/repositories/part-supply.repository.interface';
 import { UpdatePartSupplyDto } from '@application/ports/input/part-supply/dto/update-part-supply.dto';
 import { inventoryCacheKeys } from '@application/keys/inventory-cache-keys';
-import { ICache } from '@application/ports/output/cache.service.interface';
+import { ICache } from '@application/ports/output/services/cache.service.interface';
 import { IUpdatePartSupplyUseCase } from '@application/ports/input/part-supply/update-part-supply.use-case.interface';
 
 export class UpdatePartSupplyUseCase implements IUpdatePartSupplyUseCase {

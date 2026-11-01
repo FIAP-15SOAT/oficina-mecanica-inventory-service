@@ -28,7 +28,7 @@ Clean Architecture com regra de dependência única: o código aponta só para d
 | Camada | Pasta (`app/src/`) | Conteúdo hoje | Pode importar |
 | --- | --- | --- | --- |
 | Domínio | `domain/` | Entidades `Service`, `PartSupply`, `StockMovement` e `StockReservation`, enums, catálogo tipado de mensagens (`messaging/`), exceções de domínio, portas de repositório (`IPartSupplyRepository`, `IServiceRepository`, `IStockMovementRepository`, `IStockReservationRepository`, `IOutboxRepository`, `IUnitOfWork`) | Nada de `@nestjs/*`, Prisma nem `@opentelemetry/*` |
-| Aplicação | `application/` | Use cases de `service/`, `part-supply/` e `stock/`, portas de entrada e de saída (`ICache`, `ILogger`, `IMetrics`, `IInternalHttpClient`, `IQuoteItemUsageClient`), chaves de cache, envelope de mensagem, exceções, catálogos de log e de métricas | Idem |
+| Aplicação | `application/` | Use cases de `service/`, `part-supply/` e `stock/`, portas de entrada e de saída (`ports/output/services/` com `ICache`, `ILogger` e `IMetrics`, e `IQuoteItemUsageClient`), o principal autenticado em `auth/`, chaves de cache, envelope de mensagem, exceções, catálogos de log e de métricas | Idem |
 | Adaptadores de interface | `interface-adapters/` | Clean Controllers e Presenters de `service/`, `part-supply/` e `stock/` | Idem |
 | Infraestrutura | `infrastructure/` | Borda HTTP do NestJS, Prisma, mensageria, cache, cliente HTTP interno, logging, telemetria, health | Tudo; só `infrastructure/persistence/prisma/` importa o Prisma |
 

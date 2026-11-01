@@ -5,7 +5,7 @@ import {
   inventoryCacheKeys,
 } from '@application/keys/inventory-cache-keys';
 import { PartSupplyCacheMapper } from '@application/mappers/part-supply-cache.mapper';
-import { ICache } from '@application/ports/output/cache.service.interface';
+import { ICache } from '@application/ports/output/services/cache.service.interface';
 import { IPartSupplyRepository } from '@domain/interfaces/repositories/part-supply.repository.interface';
 import { createMockCache } from '../../../../helpers/cache-mock.factory';
 import {

@@ -2,7 +2,7 @@ import { IServiceRepository } from '@domain/interfaces/repositories/service.repo
 import { ResourceNotFoundException } from '@application/exceptions/resource-not-found.exception';
 import { ResourceConflictException } from '@application/exceptions/resource-conflict.exception';
 import { inventoryCacheKeys } from '@application/keys/inventory-cache-keys';
-import { ICache } from '@application/ports/output/cache.service.interface';
+import { ICache } from '@application/ports/output/services/cache.service.interface';
 import { IQuoteItemUsageClient } from '@application/ports/output/quote-item-usage-client.interface';
 import { IDeleteServiceUseCase } from '@application/ports/input/service/delete-service.use-case.interface';
 

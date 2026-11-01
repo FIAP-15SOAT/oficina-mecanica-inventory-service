@@ -6,8 +6,8 @@ import {
   ConsumeReservedStockInput,
   IConsumeReservedStockUseCase,
 } from '@application/ports/input/stock/consume-reserved-stock.use-case.interface';
-import { ICache } from '@application/ports/output/cache.service.interface';
-import { ILogger } from '@application/ports/output/logger.service.interface';
+import { ICache } from '@application/ports/output/services/cache.service.interface';
+import { ILogger } from '@application/ports/output/services/logger.service.interface';
 import { BUSINESS_EVENTS } from '@application/logging/business-event.catalog';
 import { inventoryCacheKeys } from '@application/keys/inventory-cache-keys';
 

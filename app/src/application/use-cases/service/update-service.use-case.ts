@@ -4,7 +4,7 @@ import { IUpdateServiceUseCase } from '@application/ports/input/service/update-s
 import { UpdateServiceDto } from '@application/ports/input/service/dto/update-service.dto';
 
 import { inventoryCacheKeys } from '@application/keys/inventory-cache-keys';
-import { ICache } from '@application/ports/output/cache.service.interface';
+import { ICache } from '@application/ports/output/services/cache.service.interface';
 import { ResourceConflictException } from '@application/exceptions/resource-conflict.exception';
 import { ResourceNotFoundException } from '@application/exceptions/resource-not-found.exception';
 
