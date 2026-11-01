@@ -186,7 +186,7 @@ describe('OutboxRelayService', () => {
       expect(rows).toHaveLength(1);
     });
 
-    it('does not publish when the outbox is empty', async () => {
+    it('should not publish when the outbox is empty', async () => {
       const { prisma, tx } = createPrisma([]);
 
       await expect(createRelay(prisma).runBatch()).resolves.toBeUndefined();

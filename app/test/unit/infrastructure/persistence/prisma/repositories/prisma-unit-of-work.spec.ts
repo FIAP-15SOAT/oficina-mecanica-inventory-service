@@ -1,4 +1,9 @@
 import { PrismaUnitOfWork } from '@infrastructure/persistence/prisma/repositories/prisma-unit-of-work';
+import { PrismaOutboxRepository } from '@infrastructure/persistence/prisma/repositories/prisma-outbox.repository';
+import { PrismaPartSupplyRepository } from '@infrastructure/persistence/prisma/repositories/prisma-part-supply.repository';
+import { PrismaServiceRepository } from '@infrastructure/persistence/prisma/repositories/prisma-service.repository';
+import { PrismaStockMovementRepository } from '@infrastructure/persistence/prisma/repositories/prisma-stock-movement.repository';
+import { PrismaStockReservationRepository } from '@infrastructure/persistence/prisma/repositories/prisma-stock-reservation.repository';
 
 import {
   createMockPrismaClient,
@@ -29,7 +34,13 @@ describe('PrismaUnitOfWork', () => {
 
       // Check if repositories are passed
       const repos = mockWork.mock.calls[0][0];
-      expect(repos).toEqual({ outbox: expect.any(Object) });
+      expect(repos).toEqual({
+        outbox: expect.any(PrismaOutboxRepository),
+        partSupply: expect.any(PrismaPartSupplyRepository),
+        service: expect.any(PrismaServiceRepository),
+        stockMovement: expect.any(PrismaStockMovementRepository),
+        stockReservation: expect.any(PrismaStockReservationRepository),
+      });
     });
 
     it('should propagate errors from the work function', async () => {

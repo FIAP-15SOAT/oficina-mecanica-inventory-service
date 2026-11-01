@@ -75,7 +75,7 @@ describe('JwtStrategy', () => {
   });
 
   describe('boot', () => {
-    it('fails to start without the public key', () => {
+    it('should fail to start without the public key', () => {
       expect(
         () => new JwtStrategy(configWith({ ...CONFIG, STAFF_JWT_PUBLIC_KEY: undefined })),
       ).toThrow('STAFF_JWT_PUBLIC_KEY');
@@ -97,13 +97,13 @@ describe('JwtStrategy', () => {
     });
   }
 
-  it('accepts a valid access token', async () => {
+  it('should accept a valid access token', async () => {
     await expect(authenticate(signTestStaffToken(CLAIMS))).resolves.toEqual({
       success: { sub: CLAIMS.sub, email: CLAIMS.email, role: UserRole.ADMIN },
     });
   });
 
-  it('rejects an HS256 token signed with the public key', async () => {
+  it('should reject an HS256 token signed with the public key', async () => {
     const token = sign({ ...CLAIMS, typ: 'access' }, STAFF_JWT_TEST_PUBLIC_KEY, {
       algorithm: 'HS256',
       keyid: STAFF_JWT_TEST_KEY_ID,
@@ -118,37 +118,37 @@ describe('JwtStrategy', () => {
     await expect(authenticate(token)).resolves.toEqual(failedWith('invalid algorithm'));
   });
 
-  it('rejects a token signed with another RS256 key', async () => {
+  it('should reject a token signed with another RS256 key', async () => {
     await expect(authenticate(signTestStaffToken(CLAIMS, {}, otherPrivateKey))).resolves.toEqual(
       failedWith('invalid signature'),
     );
   });
 
-  it('rejects another issuer', async () => {
+  it('should reject another issuer', async () => {
     await expect(
       authenticate(signTestStaffToken(CLAIMS, { issuer: 'other-issuer' })),
     ).resolves.toEqual(failedWith('jwt issuer invalid'));
   });
 
-  it('rejects another audience', async () => {
+  it('should reject another audience', async () => {
     await expect(
       authenticate(signTestStaffToken(CLAIMS, { audience: 'other-audience' })),
     ).resolves.toEqual(failedWith('jwt audience invalid'));
   });
 
-  it('rejects an expired token', async () => {
+  it('should reject an expired token', async () => {
     await expect(authenticate(signTestStaffToken(CLAIMS, { expiresIn: -10 }))).resolves.toEqual(
       failedWith('jwt expired'),
     );
   });
 
-  it('rejects a token without exp', async () => {
+  it('should reject a token without exp', async () => {
     const token = signRaw({ ...CLAIMS, typ: 'access' }, { keyid: STAFF_JWT_TEST_KEY_ID });
 
     await expect(authenticate(token)).resolves.toEqual(INVALID);
   });
 
-  it('rejects a missing or different kid', async () => {
+  it('should reject a missing or different kid', async () => {
     const withoutKid = signRaw({ ...CLAIMS, typ: 'access' }, { expiresIn: 600 });
     const otherKid = signTestStaffToken(CLAIMS, { keyid: 'other-kid' });
 
@@ -156,28 +156,28 @@ describe('JwtStrategy', () => {
     await expect(authenticate(otherKid)).resolves.toEqual(INVALID);
   });
 
-  it('rejects a token without sub', async () => {
+  it('should reject a token without sub', async () => {
     await expect(authenticate(signTestStaffToken(withoutClaim('sub')))).resolves.toEqual(INVALID);
   });
 
-  it('rejects a token without email', async () => {
+  it('should reject a token without email', async () => {
     await expect(authenticate(signTestStaffToken(withoutClaim('email')))).resolves.toEqual(INVALID);
     await expect(authenticate(signTestStaffToken({ ...CLAIMS, email: 42 }))).resolves.toEqual(
       INVALID,
     );
   });
 
-  it('rejects a token without role', async () => {
+  it('should reject a token without role', async () => {
     await expect(authenticate(signTestStaffToken(withoutClaim('role')))).resolves.toEqual(INVALID);
   });
 
-  it('rejects an unknown role', async () => {
+  it('should reject an unknown role', async () => {
     await expect(
       authenticate(signTestStaffToken({ ...CLAIMS, role: 'CUSTOMER' })),
     ).resolves.toEqual(INVALID);
   });
 
-  it('rejects a customer token', async () => {
+  it('should reject a customer token', async () => {
     // Customer-auth Lambda token: customer issuer and audience, no staff role.
     const token = sign({ sub: 'customer-uuid', typ: 'access' }, STAFF_JWT_TEST_PRIVATE_KEY, {
       algorithm: 'RS256',
@@ -190,7 +190,7 @@ describe('JwtStrategy', () => {
     await expect(authenticate(token)).resolves.toEqual(failedWith('jwt audience invalid'));
   });
 
-  it('rejects typ different from access', async () => {
+  it('should reject typ different from access', async () => {
     await expect(authenticate(signTestStaffToken({ ...CLAIMS, typ: 'refresh' }))).resolves.toEqual(
       INVALID,
     );

@@ -41,13 +41,13 @@ describe('Authentication guard (E2E)', () => {
     await teardownTestApp(ctx);
   });
 
-  it('returns 401 without a token', async () => {
+  it('should return 401 without a token', async () => {
     const response = await request(ctx.httpServer).get(PROBE_PATH).expect(401);
 
     expect(response.body).toEqual(UNAUTHORIZED);
   });
 
-  it('returns 401 with a token signed by another key', async () => {
+  it('should return 401 with a token signed by another key', async () => {
     const { privateKey } = generateKeyPairSync('rsa', {
       modulusLength: 2048,
       publicKeyEncoding: { type: 'spki', format: 'pem' },
@@ -62,7 +62,7 @@ describe('Authentication guard (E2E)', () => {
     expect(response.body).toEqual(UNAUTHORIZED);
   });
 
-  it('returns 403 for a role the route does not allow', async () => {
+  it('should return 403 for a role the route does not allow', async () => {
     const token = signTestStaffToken({ ...ADMIN, role: UserRole.MECHANIC });
 
     const response = await request(ctx.httpServer)
@@ -73,7 +73,7 @@ describe('Authentication guard (E2E)', () => {
     expect(response.body).toMatchObject({ statusCode: 403, error: 'Forbidden' });
   });
 
-  it('returns 200 with the principal for the required role', async () => {
+  it('should return 200 with the principal for the required role', async () => {
     const response = await request(ctx.httpServer)
       .get(PROBE_PATH)
       .set('Authorization', `Bearer ${signTestStaffToken(ADMIN)}`)
@@ -82,18 +82,18 @@ describe('Authentication guard (E2E)', () => {
     expect(response.body).toEqual(ADMIN);
   });
 
-  it('serves /api/health/live without a token', async () => {
+  it('should serve /api/health/live without a token', async () => {
     await request(ctx.httpServer).get('/api/health/live').expect(200);
   });
 
-  it('serves /api/health/ready without a token', async () => {
+  it('should serve /api/health/ready without a token', async () => {
     const response = await request(ctx.httpServer).get('/api/health/ready');
 
     expect(response.status).not.toBe(401);
     expect(response.status).toBe(200);
   });
 
-  it('serves /api/docs without a token', async () => {
+  it('should serve /api/docs without a token', async () => {
     await request(ctx.httpServer).get('/api/docs').expect(200);
   });
 });

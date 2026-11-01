@@ -13,7 +13,8 @@ import { METRIC_VIEWS } from '@infrastructure/telemetry/metric-registry';
 import { OtelMetricsAdapter } from '@infrastructure/telemetry/otel-metrics.adapter';
 import { captureDiagnostics, DiagnosticsCapture } from '../../../helpers/diagnostics-capture';
 
-// The kit's catalog is empty; these fixtures stand in for the service's first business metrics.
+// Fixtures keep the adapter tests independent of the service catalog; the attribute reuses a
+// declared logical name so the fixtures type-check against the vocabulary.
 jest.mock('@infrastructure/telemetry/metric-registry', () => {
   const actual = jest.requireActual<typeof import('@infrastructure/telemetry/metric-registry')>(
     '@infrastructure/telemetry/metric-registry',
@@ -29,7 +30,7 @@ jest.mock('@infrastructure/telemetry/metric-registry', () => {
     },
   };
   const attributes: Record<string, { key: string; cardinality: string }> = {
-    testStatus: { key: 'oficina.test.status', cardinality: 'low' },
+    outcome: { key: 'oficina.test.outcome', cardinality: 'low' },
   };
 
   return {
@@ -47,7 +48,7 @@ const TEST_CREATED = defineBusinessMetric<Record<never, never>>({
   description: 'Test counter',
 });
 
-const TEST_DURATION = defineBusinessMetric<{ testStatus?: string }>({
+const TEST_DURATION = defineBusinessMetric<{ outcome?: string }>({
   name: 'test.duration' as never,
   kind: 'histogram',
   unit: 's',
@@ -114,13 +115,13 @@ describe('OtelMetricsAdapter', () => {
 
     it('should translate the logical attribute name to the declared physical key', async () => {
       harness.adapter.record(TEST_DURATION, 42, {
-        testStatus: 'APPROVED',
+        outcome: 'APPROVED',
       });
 
       const metric = findMetric(await harness.collect(), 'oficina.test.duration');
 
       expect(metric?.dataPoints[0].attributes).toEqual({
-        'oficina.test.status': 'APPROVED',
+        'oficina.test.outcome': 'APPROVED',
       });
       expect(metric?.descriptor.unit).toBe('s');
     });
@@ -144,14 +145,14 @@ describe('OtelMetricsAdapter', () => {
      */
     it('should drop an attribute the logical vocabulary does not know', async () => {
       harness.adapter.record(TEST_DURATION, 10, {
-        testStatus: 'APPROVED',
+        outcome: 'APPROVED',
         workOrderId: 'e2a1b0c4-0000-4000-8000-000000000000',
-      } as unknown as { testStatus: string });
+      } as unknown as { outcome: string });
 
       const metric = findMetric(await harness.collect(), 'oficina.test.duration');
 
       expect(metric?.dataPoints[0].attributes).toEqual({
-        'oficina.test.status': 'APPROVED',
+        'oficina.test.outcome': 'APPROVED',
       });
       expect(diagnostics.text()).toContain('undeclared-attribute:workOrderId');
     });
@@ -163,8 +164,8 @@ describe('OtelMetricsAdapter', () => {
      */
     it('should ignore an attribute whose value was not provided', async () => {
       harness.adapter.record(TEST_DURATION, 5, {
-        testStatus: undefined,
-      } as unknown as { testStatus: string });
+        outcome: undefined,
+      } as unknown as { outcome: string });
 
       const metric = findMetric(await harness.collect(), 'oficina.test.duration');
 
@@ -174,13 +175,13 @@ describe('OtelMetricsAdapter', () => {
 
     it('should drop an attribute value that is not an accepted primitive', async () => {
       harness.adapter.record(TEST_DURATION, 5, {
-        testStatus: { toString: () => 'APPROVED' },
-      } as unknown as { testStatus: string });
+        outcome: { toString: () => 'APPROVED' },
+      } as unknown as { outcome: string });
 
       const metric = findMetric(await harness.collect(), 'oficina.test.duration');
 
       expect(metric?.dataPoints[0].attributes).toEqual({});
-      expect(diagnostics.text()).toContain('invalid-attribute-value:testStatus');
+      expect(diagnostics.text()).toContain('invalid-attribute-value:outcome');
     });
 
     it('should report and not emit when the instrument does not match the operation', async () => {

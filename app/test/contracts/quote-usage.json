@@ -1,0 +1,13 @@
+{
+  "$source": "fixture provisória do endpoint do dono dos orçamentos: GET /internal/services/:serviceId/quote-usage e GET /internal/parts-supplies/:partSupplyId/quote-usage",
+  "$description": "Corpo 200 devolvido pelo dono dos orçamentos: inUse true = item em uso; inUse false = livre; sem data.inUse booleano = fora do formato. Usado no spec do gateway e como resposta do dono nos e2e de exclusão.",
+  "inUse": {
+    "data": { "inUse": true }
+  },
+  "free": {
+    "data": { "inUse": false }
+  },
+  "malformed": {
+    "data": {}
+  }
+}

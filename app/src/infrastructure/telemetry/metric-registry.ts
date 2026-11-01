@@ -16,11 +16,20 @@ export interface MetricAttributeRegistryEntry {
   cardinality: MetricCardinality;
 }
 
-export const METRIC_REGISTRY: Readonly<Record<BusinessMetricName, MetricRegistryEntry>> = {};
+const OWNED_NAMESPACE = 'oficina';
+
+export const METRIC_REGISTRY: Readonly<Record<BusinessMetricName, MetricRegistryEntry>> = {
+  'stock.reservation': {
+    key: `${OWNED_NAMESPACE}.stock.reservation`,
+    aggregation: { type: AggregationType.DEFAULT },
+  },
+};
 
 export const METRIC_ATTRIBUTE_REGISTRY: Readonly<
   Record<MetricAttributeName, MetricAttributeRegistryEntry>
-> = {};
+> = {
+  outcome: { key: `${OWNED_NAMESPACE}.stock.reservation.outcome`, cardinality: 'fixed' },
+};
 
 /**
  * Entries with the default aggregation produce no View — a "default" View would

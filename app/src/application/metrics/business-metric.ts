@@ -1,6 +1,6 @@
 import { MetricAttributes } from './metric-attribute';
 
-export type BusinessMetricName = never;
+export type BusinessMetricName = 'stock.reservation';
 
 export type MetricInstrumentKind = 'counter' | 'histogram';
 

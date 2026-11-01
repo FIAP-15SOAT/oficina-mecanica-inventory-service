@@ -56,6 +56,8 @@ export interface SetupTestAppOptions {
   controllers?: Type[];
   /** Starts LocalStack with the messaging topology and runs the real relay and consumer. */
   withMessaging?: boolean;
+  /** Modules swapped before compile, as `[original, replacement]` pairs. */
+  overrideModules?: [Type, Type][];
 }
 
 interface LogCaptureSeam {
@@ -138,6 +140,8 @@ export async function setupTestApp(options: SetupTestAppOptions = {}): Promise<T
   process.env.DATABASE_URL = databaseUrl;
   process.env.CACHE_URL = valkeyContainer.getConnectionUrl();
   process.env.CACHE_TTL_SECONDS = '43200';
+  // Suites that exercise the owner of the quotes set their own stub URL before calling this.
+  process.env.QUOTE_ITEMS_SERVICE_URL ??= 'http://127.0.0.1:9';
   process.env.STAFF_JWT_PUBLIC_KEY = STAFF_JWT_TEST_PUBLIC_KEY;
   process.env.STAFF_JWT_KEY_ID = STAFF_JWT_TEST_KEY_ID;
   process.env.STAFF_JWT_ISSUER = STAFF_JWT_TEST_ISSUER;
@@ -158,6 +162,10 @@ export async function setupTestApp(options: SetupTestAppOptions = {}): Promise<T
   if (!localstackContainer) {
     builder.overrideProvider(OutboxRelayService).useValue({});
     builder.overrideProvider(SqsConsumerService).useValue({});
+  }
+
+  for (const [original, replacement] of options.overrideModules ?? []) {
+    builder.overrideModule(original).useModule(replacement);
   }
 
   const captureLogs = options.captureLogs === true || options.captureBootstrap === true;
