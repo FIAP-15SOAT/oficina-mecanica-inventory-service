@@ -48,8 +48,7 @@ describe('UpdateStockUseCase', () => {
   it('should register a stock entry (ENTRY)', async () => {
     const partSupply = givenPartSupply(10);
 
-    const result = await useCase.execute({
-      partSupplyId: partSupply.id,
+    const result = await useCase.execute(partSupply.id, {
       type: StockMovementType.ENTRY,
       quantity: 5,
       reason: 'Stock replenishment',
@@ -72,8 +71,7 @@ describe('UpdateStockUseCase', () => {
     const workOrderId = randomUUID();
     const partSupply = givenPartSupply(10);
 
-    const result = await useCase.execute({
-      partSupplyId: partSupply.id,
+    const result = await useCase.execute(partSupply.id, {
       type: StockMovementType.EXIT,
       quantity: 3,
       reason: 'Work order consumption',
@@ -89,8 +87,7 @@ describe('UpdateStockUseCase', () => {
   it('should register a stock adjustment (ADJUSTMENT) without a work order', async () => {
     const partSupply = givenPartSupply(10);
 
-    const result = await useCase.execute({
-      partSupplyId: partSupply.id,
+    const result = await useCase.execute(partSupply.id, {
       type: StockMovementType.ADJUSTMENT,
       quantity: 8,
       reason: 'Physical inventory adjustment',
@@ -103,8 +100,7 @@ describe('UpdateStockUseCase', () => {
   it('should create the movement with null reason when reason is not provided', async () => {
     const partSupply = givenPartSupply(10);
 
-    await useCase.execute({
-      partSupplyId: partSupply.id,
+    await useCase.execute(partSupply.id, {
       type: StockMovementType.ENTRY,
       quantity: 1,
     });
@@ -116,8 +112,7 @@ describe('UpdateStockUseCase', () => {
     const workOrderId = randomUUID();
     const partSupply = givenPartSupply(10);
 
-    await useCase.execute({
-      partSupplyId: partSupply.id,
+    await useCase.execute(partSupply.id, {
       type: StockMovementType.EXIT,
       quantity: 4,
       workOrderId,
@@ -142,8 +137,7 @@ describe('UpdateStockUseCase', () => {
   it('should log without workOrderId when the movement has none', async () => {
     const partSupply = givenPartSupply(10);
 
-    await useCase.execute({
-      partSupplyId: partSupply.id,
+    await useCase.execute(partSupply.id, {
       type: StockMovementType.ENTRY,
       quantity: 1,
     });
@@ -158,8 +152,7 @@ describe('UpdateStockUseCase', () => {
     const partSupply = givenPartSupply(10);
 
     await expect(
-      useCase.execute({
-        partSupplyId: partSupply.id,
+      useCase.execute(partSupply.id, {
         type: StockMovementType.EXIT,
         quantity: 15,
         workOrderId: randomUUID(),
@@ -176,7 +169,7 @@ describe('UpdateStockUseCase', () => {
     const partSupply = givenPartSupply(10, 8);
 
     await expect(
-      useCase.execute({ partSupplyId: partSupply.id, type: StockMovementType.EXIT, quantity: 5 }),
+      useCase.execute(partSupply.id, { type: StockMovementType.EXIT, quantity: 5 }),
     ).rejects.toThrow(BusinessRuleViolationException);
 
     expect(cache.delete).not.toHaveBeenCalled();
@@ -188,7 +181,7 @@ describe('UpdateStockUseCase', () => {
     repos.stockMovement.create.mockRejectedValue(new Error('db down'));
 
     await expect(
-      useCase.execute({ partSupplyId: partSupply.id, type: StockMovementType.ENTRY, quantity: 1 }),
+      useCase.execute(partSupply.id, { type: StockMovementType.ENTRY, quantity: 1 }),
     ).rejects.toThrow('db down');
 
     expect(logger.event).not.toHaveBeenCalled();
@@ -199,8 +192,7 @@ describe('UpdateStockUseCase', () => {
     repos.partSupply.findById.mockResolvedValue(null);
 
     await expect(
-      useCase.execute({
-        partSupplyId: randomUUID(),
+      useCase.execute(randomUUID(), {
         type: StockMovementType.ENTRY,
         quantity: 1,
       }),

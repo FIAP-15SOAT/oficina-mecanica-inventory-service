@@ -18,16 +18,14 @@ export class ConsumeReservedStockUseCase implements IConsumeReservedStockUseCase
     private readonly logger: ILogger,
   ) {}
 
-  async execute({
-    workOrderId,
-  }: ConsumeReservedStockInput): Promise<{ consumedItemCount: number }> {
+  async execute({ workOrderId }: ConsumeReservedStockInput): Promise<void> {
     const consumedPartIds = await this.unitOfWork.executeTransaction((repos) =>
       this.consume(repos, workOrderId),
     );
 
     // No reservations means the work order was already consumed, so a repeat has no effect.
     if (consumedPartIds.length === 0) {
-      return { consumedItemCount: 0 };
+      return;
     }
 
     this.logger.event(BUSINESS_EVENTS.STOCK_CONSUMED, {
@@ -36,8 +34,6 @@ export class ConsumeReservedStockUseCase implements IConsumeReservedStockUseCase
     });
 
     await this.cache.delete(consumedPartIds.map((id) => inventoryCacheKeys.partSupply(id)));
-
-    return { consumedItemCount: consumedPartIds.length };
   }
 
   private async consume(repos: IRepositories, workOrderId: string): Promise<string[]> {

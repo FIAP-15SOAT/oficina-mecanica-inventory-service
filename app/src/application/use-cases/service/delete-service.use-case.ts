@@ -3,13 +3,13 @@ import { ResourceNotFoundException } from '@application/exceptions/resource-not-
 import { ResourceConflictException } from '@application/exceptions/resource-conflict.exception';
 import { inventoryCacheKeys } from '@application/keys/inventory-cache-keys';
 import { ICache } from '@application/ports/output/services/cache.service.interface';
-import { IQuoteItemUsageClient } from '@application/ports/output/quote-item-usage-client.interface';
+import { IQuoteUsageGateway } from '@application/ports/output/gateways/quotes/quote-usage-gateway.interface';
 import { IDeleteServiceUseCase } from '@application/ports/input/service/delete-service.use-case.interface';
 
 export class DeleteServiceUseCase implements IDeleteServiceUseCase {
   constructor(
     private readonly serviceRepository: IServiceRepository,
-    private readonly quoteItemUsage: IQuoteItemUsageClient,
+    private readonly quoteUsage: IQuoteUsageGateway,
     private readonly cache: ICache,
   ) {}
 
@@ -20,7 +20,7 @@ export class DeleteServiceUseCase implements IDeleteServiceUseCase {
       throw new ResourceNotFoundException('Serviço', id);
     }
 
-    if (await this.quoteItemUsage.isServiceInUse(id)) {
+    if (await this.quoteUsage.isServiceInUse(id)) {
       throw new ResourceConflictException(
         'Serviço não pode ser excluído pois está vinculado a ordens de serviço ou orçamentos',
       );

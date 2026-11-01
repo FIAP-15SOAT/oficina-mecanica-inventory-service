@@ -5,7 +5,6 @@ import { MessagePayloads } from '@domain/messaging/message-catalog';
 import {
   IReserveStockUseCase,
   ReserveStockInput,
-  ReserveStockOutcome,
 } from '@application/ports/input/stock/reserve-stock.use-case.interface';
 import { ICache } from '@application/ports/output/services/cache.service.interface';
 import { ILogger } from '@application/ports/output/services/logger.service.interface';
@@ -29,14 +28,14 @@ export class ReserveStockUseCase implements IReserveStockUseCase {
     private readonly metrics: IMetrics,
   ) {}
 
-  async execute(input: ReserveStockInput): Promise<{ outcome: ReserveStockOutcome }> {
+  async execute(input: ReserveStockInput): Promise<void> {
     const { workOrderId, quoteId } = input;
 
     const decision = await this.unitOfWork.executeTransaction((repos) => this.decide(repos, input));
 
     // A redelivered command only republishes an earlier decision, so it is not counted again.
     if (decision.outcome === 'republished') {
-      return { outcome: 'reserved' };
+      return;
     }
 
     this.metrics.increment(BUSINESS_METRICS.STOCK_RESERVATION, { outcome: decision.outcome });
@@ -48,7 +47,7 @@ export class ReserveStockUseCase implements IReserveStockUseCase {
         missingItemCount: decision.missing.length,
       });
 
-      return { outcome: 'insufficient' };
+      return;
     }
 
     const { reservations } = decision;
@@ -63,8 +62,6 @@ export class ReserveStockUseCase implements IReserveStockUseCase {
     await this.cache.delete(
       reservations.map((reservation) => inventoryCacheKeys.partSupply(reservation.partSupplyId)),
     );
-
-    return { outcome: 'reserved' };
   }
 
   private async decide(

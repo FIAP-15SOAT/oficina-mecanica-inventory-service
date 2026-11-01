@@ -3,5 +3,5 @@ export interface ConsumeReservedStockInput {
 }
 
 export interface IConsumeReservedStockUseCase {
-  execute(input: ConsumeReservedStockInput): Promise<{ consumedItemCount: number }>;
+  execute(input: ConsumeReservedStockInput): Promise<void>;
 }

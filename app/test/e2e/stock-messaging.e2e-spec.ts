@@ -142,7 +142,7 @@ describe('Stock messaging (E2E)', () => {
     return matching();
   }
 
-  it('reserves stock and replies inventory.stock.reserved with the quote id', async () => {
+  it('should reserve stock and reply inventory.stock.reserved with the quote id', async () => {
     const partId = await insertPart(10, 1);
     const workOrderId = randomUUID();
     const quoteId = randomUUID();
@@ -162,7 +162,7 @@ describe('Stock messaging (E2E)', () => {
     ]);
   });
 
-  it('keeps a single set of reservations and replies again when the command is repeated', async () => {
+  it('should keep a single set of reservations and reply again when the command is repeated', async () => {
     const partId = await insertPart(10);
     const workOrderId = randomUUID();
     const quoteId = randomUUID();
@@ -183,7 +183,7 @@ describe('Stock messaging (E2E)', () => {
     expect(await ctx.prisma.stockReservation.count({ where: { workOrderId } })).toBe(1);
   });
 
-  it('replies inventory.stock.reservation_failed with the missing items and reserves nothing', async () => {
+  it('should reply inventory.stock.reservation_failed with the missing items and reserve nothing', async () => {
     const enough = await insertPart(10);
     const short = await insertPart(2, 1);
     const workOrderId = randomUUID();
@@ -209,7 +209,7 @@ describe('Stock messaging (E2E)', () => {
     expect(await ctx.prisma.stockReservation.count({ where: { workOrderId } })).toBe(0);
   });
 
-  it('consumes the reservations into EXIT movements and ignores a repeated command', async () => {
+  it('should consume the reservations into EXIT movements and ignore a repeated command', async () => {
     const partId = await insertPart(10);
     const workOrderId = randomUUID();
 
@@ -246,7 +246,7 @@ describe('Stock messaging (E2E)', () => {
     expect(await part(partId)).toEqual(expect.objectContaining({ stock: 6, reservedStock: 0 }));
   });
 
-  it('serves the new reservedStock on the internal read after a reservation', async () => {
+  it('should serve the new reservedStock on the internal read after a reservation', async () => {
     const partId = await insertPart(10);
     const workOrderId = randomUUID();
 

@@ -7,8 +7,6 @@ import { inventoryCacheKeys } from '@application/keys/inventory-cache-keys';
 import { ICache } from '@application/ports/output/services/cache.service.interface';
 import { ILogger } from '@application/ports/output/services/logger.service.interface';
 import { IMetrics } from '@application/ports/output/services/metrics.service.interface';
-import { PartSupply } from '@domain/entities/part-supply.entity';
-import { StockReservation } from '@domain/entities/stock-reservation.entity';
 import { IUnitOfWork } from '@domain/interfaces/repositories/unit-of-work.interface';
 import { ConcurrencyException } from '@infrastructure/exceptions/concurrency.exception';
 import { createMockCache } from '../../../../helpers/cache-mock.factory';
@@ -47,20 +45,12 @@ describe('ReserveStockUseCase', () => {
     repos.partSupply.update.mockImplementation((partSupply) => Promise.resolve(partSupply));
   });
 
-  function givenParts(...parts: PartSupply[]): void {
-    repos.partSupply.findByIds.mockResolvedValue(parts);
-  }
-
-  function reservationsWritten(): StockReservation[] {
-    return repos.stockReservation.createMany.mock.calls[0][0];
-  }
-
-  it('reserves every item when stock is enough', async () => {
+  it('should reserve every item when stock is enough', async () => {
     const filter = createMockPartSupply({ stock: 10, reservedStock: 2 });
     const pad = createMockPartSupply({ stock: 4, reservedStock: 0 });
-    givenParts(filter, pad);
+    repos.partSupply.findByIds.mockResolvedValue([filter, pad]);
 
-    const result = await useCase.execute({
+    await useCase.execute({
       workOrderId,
       quoteId,
       items: [
@@ -68,14 +58,12 @@ describe('ReserveStockUseCase', () => {
         { partSupplyId: pad.id, quantity: 4 },
       ],
     });
-
-    expect(result).toEqual({ outcome: 'reserved' });
     expect(repos.partSupply.findByIds).toHaveBeenCalledWith([filter.id, pad.id]);
     expect(filter.reservedStock).toBe(5);
     expect(pad.reservedStock).toBe(4);
     expect(repos.partSupply.update).toHaveBeenCalledWith(filter);
     expect(repos.partSupply.update).toHaveBeenCalledWith(pad);
-    expect(reservationsWritten()).toEqual([
+    expect(repos.stockReservation.createMany.mock.calls[0][0]).toEqual([
       expect.objectContaining({ partSupplyId: filter.id, workOrderId, quantity: 3 }),
       expect.objectContaining({ partSupplyId: pad.id, workOrderId, quantity: 4 }),
     ]);
@@ -87,13 +75,13 @@ describe('ReserveStockUseCase', () => {
     });
   });
 
-  it('reserves nothing and reports every missing item when one lacks stock', async () => {
+  it('should reserve nothing and report every missing item when one lacks stock', async () => {
     const enough = createMockPartSupply({ stock: 10, reservedStock: 0 });
     const short = createMockPartSupply({ stock: 5, reservedStock: 4 });
     const empty = createMockPartSupply({ stock: 0, reservedStock: 0 });
-    givenParts(enough, short, empty);
+    repos.partSupply.findByIds.mockResolvedValue([enough, short, empty]);
 
-    const result = await useCase.execute({
+    await useCase.execute({
       workOrderId,
       quoteId,
       items: [
@@ -102,8 +90,6 @@ describe('ReserveStockUseCase', () => {
         { partSupplyId: empty.id, quantity: 3 },
       ],
     });
-
-    expect(result).toEqual({ outcome: 'insufficient' });
     expect(repos.partSupply.update).not.toHaveBeenCalled();
     expect(repos.stockReservation.createMany).not.toHaveBeenCalled();
     expect(enough.reservedStock).toBe(0);
@@ -129,18 +115,16 @@ describe('ReserveStockUseCase', () => {
     });
   });
 
-  it('republishes reserved when the work order already has reservations', async () => {
+  it('should republish reserved when the work order already has reservations', async () => {
     repos.stockReservation.findByWorkOrderId.mockResolvedValue([
       createMockStockReservation({ workOrderId }),
     ]);
 
-    const result = await useCase.execute({
+    await useCase.execute({
       workOrderId,
       quoteId,
       items: [{ partSupplyId: randomUUID(), quantity: 1 }],
     });
-
-    expect(result).toEqual({ outcome: 'reserved' });
     expect(repos.stockReservation.findByWorkOrderId).toHaveBeenCalledWith(workOrderId);
     expect(repos.partSupply.findByIds).not.toHaveBeenCalled();
     expect(repos.partSupply.update).not.toHaveBeenCalled();
@@ -156,9 +140,9 @@ describe('ReserveStockUseCase', () => {
     expect(cache.delete).not.toHaveBeenCalled();
   });
 
-  it('sums repeated partSupplyId before reserving', async () => {
+  it('should sum repeated partSupplyId before reserving', async () => {
     const part = createMockPartSupply({ stock: 5, reservedStock: 0 });
-    givenParts(part);
+    repos.partSupply.findByIds.mockResolvedValue([part]);
 
     await useCase.execute({
       workOrderId,
@@ -172,16 +156,16 @@ describe('ReserveStockUseCase', () => {
     expect(repos.partSupply.findByIds).toHaveBeenCalledWith([part.id]);
     expect(repos.partSupply.update).toHaveBeenCalledTimes(1);
     expect(part.reservedStock).toBe(5);
-    expect(reservationsWritten()).toEqual([
+    expect(repos.stockReservation.createMany.mock.calls[0][0]).toEqual([
       expect.objectContaining({ partSupplyId: part.id, quantity: 5 }),
     ]);
   });
 
-  it('reports the summed quantity when repeated items exceed the available stock', async () => {
+  it('should report the summed quantity when repeated items exceed the available stock', async () => {
     const part = createMockPartSupply({ stock: 4, reservedStock: 0 });
-    givenParts(part);
+    repos.partSupply.findByIds.mockResolvedValue([part]);
 
-    const result = await useCase.execute({
+    await useCase.execute({
       workOrderId,
       quoteId,
       items: [
@@ -189,8 +173,6 @@ describe('ReserveStockUseCase', () => {
         { partSupplyId: part.id, quantity: 3 },
       ],
     });
-
-    expect(result).toEqual({ outcome: 'insufficient' });
     expect(repos.outbox.add).toHaveBeenCalledWith(
       expect.objectContaining({
         payload: { quoteId, missing: [{ partSupplyId: part.id, requested: 5, available: 4 }] },
@@ -198,12 +180,12 @@ describe('ReserveStockUseCase', () => {
     );
   });
 
-  it('treats an unknown part as missing with available 0', async () => {
+  it('should treat an unknown part as missing with available 0', async () => {
     const known = createMockPartSupply({ stock: 10, reservedStock: 0 });
     const unknownId = randomUUID();
-    givenParts(known);
+    repos.partSupply.findByIds.mockResolvedValue([known]);
 
-    const result = await useCase.execute({
+    await useCase.execute({
       workOrderId,
       quoteId,
       items: [
@@ -211,8 +193,6 @@ describe('ReserveStockUseCase', () => {
         { partSupplyId: unknownId, quantity: 2 },
       ],
     });
-
-    expect(result).toEqual({ outcome: 'insufficient' });
     expect(repos.partSupply.update).not.toHaveBeenCalled();
     expect(repos.outbox.add).toHaveBeenCalledWith({
       type: 'inventory.stock.reservation_failed',
@@ -221,9 +201,9 @@ describe('ReserveStockUseCase', () => {
     });
   });
 
-  it('lets a version conflict propagate and writes nothing after commit', async () => {
+  it('should let a version conflict propagate and write nothing after commit', async () => {
     const part = createMockPartSupply({ stock: 5, reservedStock: 0 });
-    givenParts(part);
+    repos.partSupply.findByIds.mockResolvedValue([part]);
     repos.partSupply.update.mockRejectedValue(
       new ConcurrencyException('Peça/insumo foi modificado por outra operação. Tente novamente'),
     );
@@ -239,10 +219,10 @@ describe('ReserveStockUseCase', () => {
     expect(cache.delete).not.toHaveBeenCalled();
   });
 
-  it('records the metric, logs and clears the cache only after the transaction commits', async () => {
+  it('should record the metric, log and clear the cache only after the transaction commits', async () => {
     const first = createMockPartSupply({ stock: 10, reservedStock: 0 });
     const second = createMockPartSupply({ stock: 10, reservedStock: 0 });
-    givenParts(first, second);
+    repos.partSupply.findByIds.mockResolvedValue([first, second]);
     const order: string[] = [];
     unitOfWork.executeTransaction.mockImplementation(async (work) => {
       const result = await work(repos);
@@ -281,9 +261,9 @@ describe('ReserveStockUseCase', () => {
     ]);
   });
 
-  it('does not clear the cache when stock was insufficient', async () => {
+  it('should not clear the cache when stock was insufficient', async () => {
     const part = createMockPartSupply({ stock: 1, reservedStock: 1 });
-    givenParts(part);
+    repos.partSupply.findByIds.mockResolvedValue([part]);
 
     await useCase.execute({
       workOrderId,
@@ -294,7 +274,7 @@ describe('ReserveStockUseCase', () => {
     expect(cache.delete).not.toHaveBeenCalled();
   });
 
-  it('does not touch cache, metric or log when the transaction fails', async () => {
+  it('should not touch cache, metric or log when the transaction fails', async () => {
     unitOfWork.executeTransaction.mockRejectedValue(new Error('connection lost'));
 
     await expect(

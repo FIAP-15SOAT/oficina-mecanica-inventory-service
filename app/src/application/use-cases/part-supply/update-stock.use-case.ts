@@ -16,18 +16,18 @@ export class UpdateStockUseCase implements IUpdateStockUseCase {
     private readonly logger: ILogger,
   ) {}
 
-  async execute(input: UpdateStockDto): Promise<PartSupply> {
+  async execute(id: string, input: UpdateStockDto): Promise<PartSupply> {
     const partSupply = await this.unitOfWork.executeTransaction(async (repos) => {
-      const partSupply = await repos.partSupply.findById(input.partSupplyId);
+      const partSupply = await repos.partSupply.findById(id);
 
       if (!partSupply) {
-        throw new ResourceNotFoundException('Peça ou Insumo', input.partSupplyId);
+        throw new ResourceNotFoundException('Peça ou Insumo', id);
       }
 
       partSupply.applyStockMovement(input.type, input.quantity);
 
       const movement = StockMovement.create({
-        partSupplyId: input.partSupplyId,
+        partSupplyId: id,
         workOrderId: input.workOrderId ?? null,
         type: input.type,
         quantity: input.quantity,

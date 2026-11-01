@@ -26,21 +26,21 @@ describe('Catalog and stock persistence (E2E)', () => {
   }
 
   describe('parts_supplies stock check', () => {
-    it('rejects a reserved stock above the stock', async () => {
+    it('should reject a reserved stock above the stock', async () => {
       await expect(insertPartSupply(1, 2)).rejects.toThrow(/parts_supplies_stock_check/);
     });
 
-    it('rejects a negative reserved stock', async () => {
+    it('should reject a negative reserved stock', async () => {
       await expect(insertPartSupply(5, -1)).rejects.toThrow(/parts_supplies_stock_check/);
     });
 
-    it('accepts a reserved stock equal to the stock', async () => {
+    it('should accept a reserved stock equal to the stock', async () => {
       await expect(insertPartSupply(2, 2)).resolves.toBe(1);
     });
   });
 
   describe('optimistic locking on parts_supplies', () => {
-    it('lets only one of two updates with the same version write', async () => {
+    it('should let only one of two updates with the same version write', async () => {
       const repository = ctx.app.get<IPartSupplyRepository>('IPartSupplyRepository');
       const created = await repository.create(
         PartSupply.create({

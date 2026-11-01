@@ -32,11 +32,11 @@ describe('ReserveStockHandler', () => {
   }
 
   beforeEach(() => {
-    useCase = { execute: jest.fn().mockResolvedValue({ outcome: 'reserved' }) };
+    useCase = { execute: jest.fn().mockResolvedValue(undefined) };
     handler = new ReserveStockHandler(useCase);
   });
 
-  it('reserves with the work order from the envelope and the quote from the payload', async () => {
+  it('should reserve with the work order from the envelope and the quote from the payload', async () => {
     const workOrderId = randomUUID();
 
     await handler.handle(envelope(workOrderId));
@@ -48,7 +48,7 @@ describe('ReserveStockHandler', () => {
     });
   });
 
-  it('fails without workOrderId in the envelope', async () => {
+  it('should fail without workOrderId in the envelope', async () => {
     await expect(handler.handle(envelope(null))).rejects.toThrow(
       'Comando de reserva sem o id da ordem de serviço',
     );
@@ -68,29 +68,29 @@ describe('ReserveStockPayload', () => {
     return { partSupplyId: randomUUID(), quantity: 1, ...fields };
   }
 
-  it('accepts a valid payload', async () => {
+  it('should accept a valid payload', async () => {
     expect(await invalidProperties({ quoteId: randomUUID(), items: [item(), item()] })).toEqual([]);
   });
 
-  it('rejects a non-uuid quoteId', async () => {
+  it('should reject a non-uuid quoteId', async () => {
     expect(await invalidProperties({ quoteId: 'quote-1', items: [item()] })).toEqual(['quoteId']);
   });
 
-  it('rejects empty items', async () => {
+  it('should reject empty items', async () => {
     expect(await invalidProperties({ quoteId: randomUUID(), items: [] })).toEqual(['items']);
   });
 
-  it('rejects items that are not an array', async () => {
+  it('should reject items that are not an array', async () => {
     expect(await invalidProperties({ quoteId: randomUUID(), items: item() })).toEqual(['items']);
   });
 
-  it.each([0, -1, 1.5, '2'])('rejects quantity zero or fractional (%p)', async (quantity) => {
+  it.each([0, -1, 1.5, '2'])('should reject quantity zero or fractional (%p)', async (quantity) => {
     expect(await invalidProperties({ quoteId: randomUUID(), items: [item({ quantity })] })).toEqual(
       ['items'],
     );
   });
 
-  it('rejects a non-uuid partSupplyId', async () => {
+  it('should reject a non-uuid partSupplyId', async () => {
     expect(
       await invalidProperties({ quoteId: randomUUID(), items: [item({ partSupplyId: 'p-1' })] }),
     ).toEqual(['items']);
@@ -98,7 +98,7 @@ describe('ReserveStockPayload', () => {
 });
 
 describe('StockMessagingModule', () => {
-  it('registers on init for inventory.stock.reserve', () => {
+  it('should register on init for inventory.stock.reserve', () => {
     const registry = new MessageHandlerRegistry();
     const reserve = new ReserveStockHandler({ execute: jest.fn() });
     const consume = new ConsumeReservedStockHandler({ execute: jest.fn() });
@@ -111,7 +111,7 @@ describe('StockMessagingModule', () => {
     });
   });
 
-  it('registers on init for inventory.stock.consume', () => {
+  it('should register on init for inventory.stock.consume', () => {
     const registry = new MessageHandlerRegistry();
     const reserve = new ReserveStockHandler({ execute: jest.fn() });
     const consume = new ConsumeReservedStockHandler({ execute: jest.fn() });

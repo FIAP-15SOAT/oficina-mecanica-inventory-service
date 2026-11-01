@@ -1,3 +1,5 @@
+import { Injectable } from '@nestjs/common';
+
 import { Prisma } from '@generated/client';
 
 import { PrismaService } from '../prisma.service';
@@ -21,6 +23,7 @@ const STOCK_MOVEMENT_INCLUDE = {
   partSupply: true,
 } as const;
 
+@Injectable()
 export class PrismaStockMovementRepository implements IStockMovementRepository {
   constructor(private readonly prisma: PrismaService) {}
 

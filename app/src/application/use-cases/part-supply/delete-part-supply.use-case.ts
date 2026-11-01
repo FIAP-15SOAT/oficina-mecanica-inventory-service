@@ -3,13 +3,13 @@ import { ResourceConflictException } from '@application/exceptions/resource-conf
 import { IPartSupplyRepository } from '@domain/interfaces/repositories/part-supply.repository.interface';
 import { inventoryCacheKeys } from '@application/keys/inventory-cache-keys';
 import { ICache } from '@application/ports/output/services/cache.service.interface';
-import { IQuoteItemUsageClient } from '@application/ports/output/quote-item-usage-client.interface';
+import { IQuoteUsageGateway } from '@application/ports/output/gateways/quotes/quote-usage-gateway.interface';
 import { IDeletePartSupplyUseCase } from '@application/ports/input/part-supply/delete-part-supply.use-case.interface';
 
 export class DeletePartSupplyUseCase implements IDeletePartSupplyUseCase {
   constructor(
     private readonly partSupplyRepository: IPartSupplyRepository,
-    private readonly quoteItemUsage: IQuoteItemUsageClient,
+    private readonly quoteUsage: IQuoteUsageGateway,
     private readonly cache: ICache,
   ) {}
 
@@ -22,7 +22,7 @@ export class DeletePartSupplyUseCase implements IDeletePartSupplyUseCase {
 
     existing.ensureCanDelete();
 
-    if (await this.quoteItemUsage.isPartSupplyInUse(id)) {
+    if (await this.quoteUsage.isPartSupplyInUse(id)) {
       throw new ResourceConflictException(
         'Peça ou insumo não pode ser excluído pois está vinculado a ordens de serviço ou orçamentos',
       );

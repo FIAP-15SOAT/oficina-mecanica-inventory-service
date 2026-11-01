@@ -13,6 +13,7 @@ import { JwtStrategy } from './infrastructure/http/strategies/jwt.strategy';
 import { LoggingModule } from './infrastructure/logging/logging.module';
 import { TelemetryModule } from './infrastructure/telemetry/telemetry.module';
 import { PrismaModule } from './infrastructure/persistence/prisma/prisma.module';
+import { RepositoriesModule } from './infrastructure/persistence/prisma/repositories/repositories.module';
 import { HealthModule } from './infrastructure/http/controllers/health/health.module';
 import { MessagingModule } from './infrastructure/messaging/messaging.module';
 import { CacheModule } from './infrastructure/cache/cache.module';
@@ -21,6 +22,7 @@ import { PartSupplyModule } from './infrastructure/http/controllers/part-supply/
 import { StockModule } from './infrastructure/http/controllers/stock/stock.module';
 import { InternalCatalogModule } from './infrastructure/http/controllers/internal/internal-catalog.module';
 import { ClientsModule } from './infrastructure/clients/clients.module';
+import { GatewaysModule } from './infrastructure/gateways/gateways.module';
 import { StockMessagingModule } from './infrastructure/messaging/stock-messaging.module';
 
 @Module({
@@ -31,9 +33,11 @@ import { StockMessagingModule } from './infrastructure/messaging/stock-messaging
     LoggingModule,
     TelemetryModule,
     PrismaModule,
+    RepositoriesModule,
     MessagingModule,
     CacheModule,
     ClientsModule,
+    GatewaysModule,
     HealthModule,
     ServiceModule,
     PartSupplyModule,

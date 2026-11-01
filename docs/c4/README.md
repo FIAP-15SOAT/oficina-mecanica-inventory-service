@@ -29,7 +29,7 @@ docker run --rm -i plantuml/plantuml:latest -tpng -pipe < inventory-component.pu
 | Valkey 9.1 | Cache | ElastiCache do Inventory, só deste serviço |
 | SNS FIFO `oficina-events.fifo` | Tópico | Destino do relay; um tópico para a solução |
 | SQS FIFO `inventory.fifo` e DLQ | Fila | Fila consumida pelo serviço, com filter policy por `type` e DLQ após 5 entregas |
-| Work Order | Serviço externo | Dono dos orçamentos, consultado em `/internal/.../quote-items` antes de excluir |
+| Work Order | Serviço externo | Dono dos orçamentos, consultado em `/internal/.../quote-usage` antes de excluir |
 
 ### Componentes do Inventory Service
 
@@ -45,7 +45,7 @@ docker run --rm -i plantuml/plantuml:latest -tpng -pipe < inventory-component.pu
 | Outbox Relay | A cada 500 ms publica até 10 linhas no SNS com `MessageGroupId` = `workOrderId` ou `messageId`, sob advisory lock |
 | Consumidor SQS | Lê `inventory.fifo`, valida o envelope e o payload e despacha ao handler pelo `type` |
 | Adaptador de cache | `ICache` com `ValkeyCacheAdapter`, cache-aside por id que degrada para o banco |
-| Cliente HTTP interno | `InternalHttpClient`, que consulta no dono dos orçamentos se um serviço ou peça está em uso antes de excluí-lo, com `x-request-id` |
+| Gateway de uso em orçamentos | `QuoteUsageGateway` sobre o `InternalHttpClient`: consulta no dono dos orçamentos se um serviço ou peça está em uso antes de excluí-lo, com `x-request-id` |
 | Logging e telemetria | Logs JSON no stdout e traces e métricas pelo OpenTelemetry |
 
 Convenção: a tecnologia ou o protocolo aparece nas setas que cruzam a fronteira do serviço.

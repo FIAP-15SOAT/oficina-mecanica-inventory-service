@@ -1,3 +1,5 @@
+import { Injectable } from '@nestjs/common';
+
 import { Prisma, Service as PrismaServiceModel } from '@generated/client';
 import { ResourceConflictException } from '@application/exceptions/resource-conflict.exception';
 import { ResourceNotFoundException } from '@application/exceptions/resource-not-found.exception';
@@ -14,6 +16,7 @@ import {
 } from '@domain/interfaces/common/pagination.interface';
 import { paginate } from '@infrastructure/persistence/prisma/helpers/prisma-paginate.helper';
 
+@Injectable()
 export class PrismaServiceRepository implements IServiceRepository {
   constructor(private readonly prisma: PrismaService) {}
 

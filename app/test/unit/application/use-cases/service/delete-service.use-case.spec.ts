@@ -4,7 +4,7 @@ import { ResourceNotFoundException } from '@application/exceptions/resource-not-
 import { ServiceRequestRejectedException } from '@application/exceptions/service-request-rejected.exception';
 import { inventoryCacheKeys } from '@application/keys/inventory-cache-keys';
 import { ICache } from '@application/ports/output/services/cache.service.interface';
-import { IQuoteItemUsageClient } from '@application/ports/output/quote-item-usage-client.interface';
+import { IQuoteUsageGateway } from '@application/ports/output/gateways/quotes/quote-usage-gateway.interface';
 import { IServiceRepository } from '@domain/interfaces/repositories/service.repository.interface';
 import { ServiceIntegrationException } from '@infrastructure/exceptions/service-integration.exception';
 
@@ -17,23 +17,23 @@ import {
 describe('DeleteServiceUseCase', () => {
   let useCase: DeleteServiceUseCase;
   let serviceRepository: jest.Mocked<IServiceRepository>;
-  let quoteItemUsage: jest.Mocked<IQuoteItemUsageClient>;
+  let quoteUsage: jest.Mocked<IQuoteUsageGateway>;
   let cache: jest.Mocked<ICache>;
 
   beforeEach(() => {
     serviceRepository = createMockServiceRepository();
-    quoteItemUsage = { isServiceInUse: jest.fn(), isPartSupplyInUse: jest.fn() };
+    quoteUsage = { isServiceInUse: jest.fn(), isPartSupplyInUse: jest.fn() };
     cache = createMockCache();
-    useCase = new DeleteServiceUseCase(serviceRepository, quoteItemUsage, cache);
+    useCase = new DeleteServiceUseCase(serviceRepository, quoteUsage, cache);
   });
 
   it('should delete the service and then drop its cache key when it is not in use', async () => {
     serviceRepository.findById.mockResolvedValue(createMockService({ id: 'svc-1' }));
-    quoteItemUsage.isServiceInUse.mockResolvedValue(false);
+    quoteUsage.isServiceInUse.mockResolvedValue(false);
 
     await useCase.execute('svc-1');
 
-    expect(quoteItemUsage.isServiceInUse).toHaveBeenCalledWith('svc-1');
+    expect(quoteUsage.isServiceInUse).toHaveBeenCalledWith('svc-1');
     expect(serviceRepository.delete).toHaveBeenCalledWith('svc-1');
     expect(cache.delete).toHaveBeenCalledWith([inventoryCacheKeys.service('svc-1')]);
     expect(cache.delete.mock.invocationCallOrder[0]).toBeGreaterThan(
@@ -45,13 +45,13 @@ describe('DeleteServiceUseCase', () => {
     serviceRepository.findById.mockResolvedValue(null);
 
     await expect(useCase.execute('svc-1')).rejects.toBeInstanceOf(ResourceNotFoundException);
-    expect(quoteItemUsage.isServiceInUse).not.toHaveBeenCalled();
+    expect(quoteUsage.isServiceInUse).not.toHaveBeenCalled();
     expect(serviceRepository.delete).not.toHaveBeenCalled();
   });
 
   it('should throw ResourceConflictException when the service is linked to quotes', async () => {
     serviceRepository.findById.mockResolvedValue(createMockService({ id: 'svc-1' }));
-    quoteItemUsage.isServiceInUse.mockResolvedValue(true);
+    quoteUsage.isServiceInUse.mockResolvedValue(true);
 
     await expect(useCase.execute('svc-1')).rejects.toThrow(
       new ResourceConflictException(
@@ -67,7 +67,7 @@ describe('DeleteServiceUseCase', () => {
     ['owner rejection', new ServiceRequestRejectedException(404, 'not found')],
   ])('should propagate %s and delete nothing', async (_label, error) => {
     serviceRepository.findById.mockResolvedValue(createMockService({ id: 'svc-1' }));
-    quoteItemUsage.isServiceInUse.mockRejectedValue(error);
+    quoteUsage.isServiceInUse.mockRejectedValue(error);
 
     await expect(useCase.execute('svc-1')).rejects.toBe(error);
     expect(serviceRepository.delete).not.toHaveBeenCalled();
@@ -76,7 +76,7 @@ describe('DeleteServiceUseCase', () => {
 
   it('should keep the cache key when the delete fails', async () => {
     serviceRepository.findById.mockResolvedValue(createMockService({ id: 'svc-1' }));
-    quoteItemUsage.isServiceInUse.mockResolvedValue(false);
+    quoteUsage.isServiceInUse.mockResolvedValue(false);
     serviceRepository.delete.mockRejectedValue(new Error('db down'));
 
     await expect(useCase.execute('svc-1')).rejects.toThrow('db down');

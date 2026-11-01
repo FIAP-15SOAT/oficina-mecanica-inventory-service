@@ -210,7 +210,7 @@ describe('Messaging (E2E)', () => {
   }
 
   // Runs first, while the queue holds no other message, so an empty queue means this one was deleted.
-  it('processes a valid message, acks it and continues the trace', async () => {
+  it('should process a valid message, ack it and continue the trace', async () => {
     const workOrderId = randomUUID();
     const message = reserve(workOrderId);
     const calls: { envelope: MessageEnvelope; span?: SpanContext }[] = [];
@@ -238,7 +238,7 @@ describe('Messaging (E2E)', () => {
     expect(consumeSpan?.parentSpanContext?.spanId).toBe(PARENT_SPAN_ID);
   });
 
-  it('holds the group until the first message is processed or dead-lettered', async () => {
+  it('should hold the group until the first message is processed or dead-lettered', async () => {
     const workOrderId = randomUUID();
     const first = reserve(workOrderId);
     const second = reserve(workOrderId);
@@ -264,7 +264,7 @@ describe('Messaging (E2E)', () => {
     expect(JSON.parse((await waitForDeadLettered(firstSqsId)).Body as string)).toEqual(first);
   });
 
-  it('logs and does not ack a valid message of a type without handler', async () => {
+  it('should log and not ack a valid message of a type without handler', async () => {
     const message = envelope();
     const messageId = message.messageId as string;
     const sqsMessageId = await send(JSON.stringify(message));
@@ -283,7 +283,7 @@ describe('Messaging (E2E)', () => {
     expect(JSON.parse(inDlq.Body as string)).toEqual(message);
   });
 
-  it('does not ack an invalid envelope and keeps consuming', async () => {
+  it('should not ack an invalid envelope and keep consuming', async () => {
     const notJson = await send('{not json');
     const withoutMessageIdBody = JSON.stringify(envelope({ messageId: undefined }));
     const withoutMessageId = await send(withoutMessageIdBody);
@@ -310,7 +310,7 @@ describe('Messaging (E2E)', () => {
     expect(eventLines('messaging.message.dead_lettered', withoutMessageId)).toHaveLength(1);
   });
 
-  it('emits only declared fields on messaging lines', async () => {
+  it('should emit only declared fields on messaging lines', async () => {
     // Its own failing message, so the check has messaging lines even when it runs alone.
     const sqsMessageId = await send('{not json');
     await waitFor(

@@ -2,10 +2,7 @@ import { CreatePartSupplyUseCase } from '@application/use-cases/part-supply/crea
 import { ResourceConflictException } from '@application/exceptions/resource-conflict.exception';
 import { PartSupplyCategory } from '@domain/enums/part-supply-category.enum';
 import { Unit } from '@domain/enums/unit.enum';
-import { inventoryCacheKeys } from '@application/keys/inventory-cache-keys';
-import { ICache } from '@application/ports/output/services/cache.service.interface';
 import { IPartSupplyRepository } from '@domain/interfaces/repositories/part-supply.repository.interface';
-import { createMockCache } from '../../../../helpers/cache-mock.factory';
 import {
   createMockPartSupply,
   createMockPartSupplyRepository,
@@ -14,12 +11,10 @@ import {
 describe('CreatePartSupplyUseCase', () => {
   let useCase: CreatePartSupplyUseCase;
   let partSupplyRepository: jest.Mocked<IPartSupplyRepository>;
-  let cache: jest.Mocked<ICache>;
 
   beforeEach(() => {
     partSupplyRepository = createMockPartSupplyRepository();
-    cache = createMockCache();
-    useCase = new CreatePartSupplyUseCase(partSupplyRepository, cache);
+    useCase = new CreatePartSupplyUseCase(partSupplyRepository);
   });
 
   const input = {
@@ -42,10 +37,6 @@ describe('CreatePartSupplyUseCase', () => {
     expect(partSupplyRepository.findBySku).toHaveBeenCalledWith('FO-001');
     expect(partSupplyRepository.create).toHaveBeenCalled();
     expect(result).toEqual(saved);
-    expect(cache.delete).toHaveBeenCalledWith([inventoryCacheKeys.partSupply(saved.id)]);
-    expect(cache.delete.mock.invocationCallOrder[0]).toBeGreaterThan(
-      partSupplyRepository.create.mock.invocationCallOrder[0],
-    );
   });
 
   it('should register a Supply in Stock successfully', async () => {
@@ -70,15 +61,5 @@ describe('CreatePartSupplyUseCase', () => {
 
     await expect(useCase.execute(input)).rejects.toThrow(ResourceConflictException);
     expect(partSupplyRepository.create).not.toHaveBeenCalled();
-    expect(cache.delete).not.toHaveBeenCalled();
-  });
-
-  it('should not touch the cache when the repository fails', async () => {
-    partSupplyRepository.findBySku.mockResolvedValue(null);
-    partSupplyRepository.create.mockRejectedValue(new Error('db down'));
-
-    await expect(useCase.execute(input)).rejects.toThrow('db down');
-
-    expect(cache.delete).not.toHaveBeenCalled();
   });
 });

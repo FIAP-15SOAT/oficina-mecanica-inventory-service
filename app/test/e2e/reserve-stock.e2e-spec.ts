@@ -48,13 +48,13 @@ describe('Reserve stock (E2E)', () => {
     return ctx.prisma.partSupply.findUniqueOrThrow({ where: { id } });
   }
 
-  it('reserves, raises reserved_stock and writes inventory.stock.reserved to the outbox', async () => {
+  it('should reserve, raise reserved_stock and write inventory.stock.reserved to the outbox', async () => {
     const first = await insertPart(10, 2);
     const second = await insertPart(3);
     const workOrderId = randomUUID();
     const quoteId = randomUUID();
 
-    const result = await useCase.execute({
+    await useCase.execute({
       workOrderId,
       quoteId,
       items: [
@@ -62,8 +62,6 @@ describe('Reserve stock (E2E)', () => {
         { partSupplyId: second, quantity: 3 },
       ],
     });
-
-    expect(result).toEqual({ outcome: 'reserved' });
     expect((await part(first)).reservedStock).toBe(5);
     expect((await part(second)).reservedStock).toBe(3);
     expect(
@@ -87,13 +85,13 @@ describe('Reserve stock (E2E)', () => {
     ]);
   });
 
-  it('writes only inventory.stock.reservation_failed when a part lacks stock', async () => {
+  it('should write only inventory.stock.reservation_failed when a part lacks stock', async () => {
     const enough = await insertPart(10);
     const short = await insertPart(2, 1);
     const workOrderId = randomUUID();
     const quoteId = randomUUID();
 
-    const result = await useCase.execute({
+    await useCase.execute({
       workOrderId,
       quoteId,
       items: [
@@ -101,8 +99,6 @@ describe('Reserve stock (E2E)', () => {
         { partSupplyId: short, quantity: 2 },
       ],
     });
-
-    expect(result).toEqual({ outcome: 'insufficient' });
     expect((await part(enough)).reservedStock).toBe(0);
     expect((await part(short)).reservedStock).toBe(1);
     expect(await ctx.prisma.stockReservation.count()).toBe(0);
@@ -115,7 +111,7 @@ describe('Reserve stock (E2E)', () => {
     ]);
   });
 
-  it('republishes reserved without reserving again for a redelivered command', async () => {
+  it('should republish reserved without reserving again for a redelivered command', async () => {
     const id = await insertPart(5);
     const workOrderId = randomUUID();
     const command = {
@@ -135,7 +131,7 @@ describe('Reserve stock (E2E)', () => {
     ]);
   });
 
-  it('never reserves more than the stock when two work orders race for the last unit', async () => {
+  it('should never reserve more than the stock when two work orders race for the last unit', async () => {
     const id = await insertPart(1);
 
     const results = await Promise.allSettled([
@@ -151,17 +147,15 @@ describe('Reserve stock (E2E)', () => {
       }),
     ]);
 
-    const reserved = results.filter(
-      (result) => result.status === 'fulfilled' && result.value.outcome === 'reserved',
-    );
-    const lost = results.filter((result) => !reserved.includes(result));
-    expect(reserved).toHaveLength(1);
-    expect(lost).toHaveLength(1);
+    // The loser either hits the version conflict (rolled back) or reads the new balance and fails.
+    const rejected = results.filter((result) => result.status === 'rejected');
+    const types = (await ctx.prisma.outboxMessage.findMany()).map((message) => message.type);
+    expect(rejected.every((result) => result.reason instanceof ConcurrencyException)).toBe(true);
+    expect(types.filter((type) => type === 'inventory.stock.reserved')).toHaveLength(1);
     expect(
-      lost[0].status === 'rejected'
-        ? lost[0].reason instanceof ConcurrencyException
-        : lost[0].value.outcome === 'insufficient',
-    ).toBe(true);
+      rejected.length +
+        types.filter((type) => type === 'inventory.stock.reservation_failed').length,
+    ).toBe(1);
 
     const stored = await part(id);
     expect(stored.reservedStock).toBe(1);

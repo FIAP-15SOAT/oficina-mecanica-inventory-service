@@ -60,7 +60,7 @@ export class PartSupplyController {
   }
 
   async updateStock(id: string, input: UpdateStockRequest): Promise<PartSupplyDataResponse> {
-    const partSupply = await this.updateStockUseCase.execute({ partSupplyId: id, ...input });
+    const partSupply = await this.updateStockUseCase.execute(id, input);
     return PartSupplyPresenter.toDataResponse(partSupply);
   }
 

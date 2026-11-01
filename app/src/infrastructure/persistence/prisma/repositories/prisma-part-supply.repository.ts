@@ -1,3 +1,5 @@
+import { Injectable } from '@nestjs/common';
+
 import { Prisma, PartSupply as PrismaPartSupply } from '@generated/client';
 
 import { PrismaService } from '@infrastructure/persistence/prisma/prisma.service';
@@ -20,6 +22,7 @@ import {
 
 import { paginate } from '@infrastructure/persistence/prisma/helpers/prisma-paginate.helper';
 
+@Injectable()
 export class PrismaPartSupplyRepository implements IPartSupplyRepository {
   constructor(private readonly prisma: PrismaService) {}
 

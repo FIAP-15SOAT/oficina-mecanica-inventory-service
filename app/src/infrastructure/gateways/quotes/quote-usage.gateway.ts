@@ -1,11 +1,10 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
-import { InternalHttpClient } from './internal-http-client';
-
 import { ServiceRequestRejectedException } from '@application/exceptions/service-request-rejected.exception';
-import { IQuoteItemUsageClient } from '@application/ports/output/quote-item-usage-client.interface';
+import { IQuoteUsageGateway } from '@application/ports/output/gateways/quotes/quote-usage-gateway.interface';
 import { ILogger } from '@application/ports/output/services/logger.service.interface';
+import { InternalHttpClient } from '@infrastructure/clients/internal-http-client';
 import { ServiceIntegrationException } from '@infrastructure/exceptions/service-integration.exception';
 import { TECHNICAL_EVENTS } from '@infrastructure/logging/technical-event.catalog';
 
@@ -13,7 +12,7 @@ const USAGE_CHECK_UNAVAILABLE_MESSAGE =
   'Não foi possível confirmar se o item é usado em orçamentos; nada foi excluído, tente novamente mais tarde';
 
 @Injectable()
-export class QuoteItemUsageClient implements IQuoteItemUsageClient {
+export class QuoteUsageGateway implements IQuoteUsageGateway {
   private readonly baseUrl: string;
 
   constructor(
@@ -25,24 +24,24 @@ export class QuoteItemUsageClient implements IQuoteItemUsageClient {
   }
 
   isServiceInUse(serviceId: string): Promise<boolean> {
-    return this.hasQuoteItems(`/internal/services/${serviceId}/quote-items`);
+    return this.readInUse(`/internal/services/${serviceId}/quote-usage`);
   }
 
   isPartSupplyInUse(partSupplyId: string): Promise<boolean> {
-    return this.hasQuoteItems(`/internal/parts-supplies/${partSupplyId}/quote-items`);
+    return this.readInUse(`/internal/parts-supplies/${partSupplyId}/quote-usage`);
   }
 
-  private async hasQuoteItems(path: string): Promise<boolean> {
+  private async readInUse(path: string): Promise<boolean> {
     const body = await this.fetchBody(path);
 
     // A malformed answer must never read as "not in use": the delete would go ahead.
-    const items = (body as { data?: unknown } | null)?.data;
+    const inUse = (body as { data?: { inUse?: unknown } | null } | null)?.data?.inUse;
 
-    if (!Array.isArray(items)) {
+    if (typeof inUse !== 'boolean') {
       throw new ServiceIntegrationException(USAGE_CHECK_UNAVAILABLE_MESSAGE);
     }
 
-    return items.length > 0;
+    return inUse;
   }
 
   private async fetchBody(path: string): Promise<unknown> {
@@ -55,7 +54,7 @@ export class QuoteItemUsageClient implements IQuoteItemUsageClient {
       // Whatever the outcome, the delete must not go ahead; only the log tells "route missing" from "owner down".
       if (error instanceof ServiceRequestRejectedException) {
         this.logger.event(
-          TECHNICAL_EVENTS.QUOTE_ITEM_USAGE_REJECTED,
+          TECHNICAL_EVENTS.QUOTE_USAGE_REJECTED,
           { ownerStatusCode: error.statusCode },
           error,
         );

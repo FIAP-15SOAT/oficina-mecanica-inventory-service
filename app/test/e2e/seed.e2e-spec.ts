@@ -40,7 +40,7 @@ describe('Catalog seed (E2E)', () => {
     await container?.stop();
   });
 
-  it('creates the 25 services with the canonical ids, once', async () => {
+  it('should create the 25 services with the canonical ids, once', async () => {
     const services = await prisma.service.findMany();
 
     expect(services).toHaveLength(25);
@@ -49,7 +49,7 @@ describe('Catalog seed (E2E)', () => {
     }
   });
 
-  it('creates the 8 part supplies with the canonical ids, once', async () => {
+  it('should create the 8 part supplies with the canonical ids, once', async () => {
     const parts = await prisma.partSupply.findMany();
 
     expect(parts).toHaveLength(8);
@@ -58,13 +58,13 @@ describe('Catalog seed (E2E)', () => {
     }
   });
 
-  it('starts every part with no reservation at version 1', async () => {
+  it('should start every part with no reservation at version 1', async () => {
     const parts = await prisma.partSupply.findMany();
 
     expect(parts.every((part) => part.reservedStock === 0 && part.version === 1)).toBe(true);
   });
 
-  it('does not overwrite the stock of an existing part on a new seed', async () => {
+  it('should not overwrite the stock of an existing part on a new seed', async () => {
     const sku = 'FILT-OL-001';
     await prisma.partSupply.update({ where: { sku }, data: { stock: 7 } });
 
@@ -76,7 +76,7 @@ describe('Catalog seed (E2E)', () => {
     expect(await prisma.service.count()).toBe(25);
   });
 
-  it('does not overwrite or fail on edited, renamed or re-keyed rows', async () => {
+  it('should not overwrite or fail on edited, renamed or re-keyed rows', async () => {
     const [editedName, renamedName] = Object.keys(SEED_IDS.services);
     const sku = 'OLEO-5W30-1L';
     await prisma.service.update({
@@ -97,7 +97,7 @@ describe('Catalog seed (E2E)', () => {
     expect(await prisma.partSupply.count()).toBe(8);
   });
 
-  it('does not fail or overwrite when a seeded item was deleted and another took its name or SKU', async () => {
+  it('should not fail or overwrite when a seeded item was deleted and another took its name or SKU', async () => {
     const name = Object.keys(SEED_IDS.services)[2];
     const sku = 'VELA-IG-001';
     await prisma.service.delete({ where: { name } });
@@ -122,7 +122,7 @@ describe('Catalog seed (E2E)', () => {
     expect(await prisma.partSupply.count()).toBe(8);
   });
 
-  it('recreates a seeded item deleted by the admin when its name and SKU are free', async () => {
+  it('should recreate a seeded item deleted by the admin when its name and SKU are free', async () => {
     const name = Object.keys(SEED_IDS.services)[3];
     const sku = 'BAT-60AH-001';
     await prisma.service.delete({ where: { name } });

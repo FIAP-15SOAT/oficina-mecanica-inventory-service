@@ -260,7 +260,7 @@ describe('Health endpoints with the database unreachable (E2E)', () => {
     await ctx.postgresContainer.stop();
   });
 
-  it('ready returns 503 and live 200 with PostgreSQL down', async () => {
+  it('should return 503 on ready and 200 on live with PostgreSQL down', async () => {
     await request(httpServer).get(READINESS_PATH).expect(503);
     await request(httpServer).get(LIVENESS_PATH).expect(200);
   });
@@ -362,7 +362,7 @@ describe('Health endpoints with the cache unreachable (E2E)', () => {
   });
 
   /** Readiness checks only PostgreSQL: a cache outage degrades latency, not availability. */
-  it('ready returns 200 with Valkey down', async () => {
+  it('should return 200 on ready with Valkey down', async () => {
     const response = await request(httpServer).get(READINESS_PATH).expect(200);
 
     expect(response.body).toEqual({ status: 'ok' });

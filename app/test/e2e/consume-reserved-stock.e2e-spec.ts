@@ -52,16 +52,14 @@ describe('Consume reserved stock (E2E)', () => {
     return ctx.prisma.partSupply.findUniqueOrThrow({ where: { id } });
   }
 
-  it('consumes both parts, writes one EXIT each, deletes the reservations and no outbox row', async () => {
+  it('should consume both parts, write one EXIT each, delete the reservations and write no outbox row', async () => {
     const first = await insertPart(10, 5);
     const second = await insertPart(4, 4);
     const workOrderId = randomUUID();
     await reserve(workOrderId, first, 3);
     await reserve(workOrderId, second, 4);
 
-    const result = await useCase.execute({ workOrderId });
-
-    expect(result).toEqual({ consumedItemCount: 2 });
+    await useCase.execute({ workOrderId });
     expect(await part(first)).toEqual(expect.objectContaining({ stock: 7, reservedStock: 2 }));
     expect(await part(second)).toEqual(expect.objectContaining({ stock: 0, reservedStock: 0 }));
     expect(
@@ -91,38 +89,32 @@ describe('Consume reserved stock (E2E)', () => {
     expect(await ctx.prisma.outboxMessage.count()).toBe(0);
   });
 
-  it('has no effect and no error on a repeated command', async () => {
+  it('should have no effect and no error on a repeated command', async () => {
     const id = await insertPart(5, 2);
     const workOrderId = randomUUID();
     await reserve(workOrderId, id, 2);
 
     await useCase.execute({ workOrderId });
-    const repeated = await useCase.execute({ workOrderId });
-
-    expect(repeated).toEqual({ consumedItemCount: 0 });
+    await useCase.execute({ workOrderId });
     expect(await part(id)).toEqual(expect.objectContaining({ stock: 3, reservedStock: 0 }));
     expect(await ctx.prisma.stockMovement.count()).toBe(1);
   });
 
-  it('has no effect for a work order without reservations', async () => {
+  it('should have no effect for a work order without reservations', async () => {
     const id = await insertPart(5, 2);
 
-    const result = await useCase.execute({ workOrderId: randomUUID() });
-
-    expect(result).toEqual({ consumedItemCount: 0 });
+    await useCase.execute({ workOrderId: randomUUID() });
     expect(await part(id)).toEqual(expect.objectContaining({ stock: 5, reservedStock: 2 }));
     expect(await ctx.prisma.stockMovement.count()).toBe(0);
   });
 
-  it('sums two reservations of the same part in one update and one movement', async () => {
+  it('should sum two reservations of the same part in one update and one movement', async () => {
     const id = await insertPart(10, 5);
     const workOrderId = randomUUID();
     await reserve(workOrderId, id, 2);
     await reserve(workOrderId, id, 3);
 
-    const result = await useCase.execute({ workOrderId });
-
-    expect(result).toEqual({ consumedItemCount: 1 });
+    await useCase.execute({ workOrderId });
     expect(await part(id)).toEqual(
       expect.objectContaining({ stock: 5, reservedStock: 0, version: 2 }),
     );
@@ -131,7 +123,7 @@ describe('Consume reserved stock (E2E)', () => {
     ]);
   });
 
-  it('rolls everything back when the part version changes between read and write', async () => {
+  it('should roll everything back when the part version changes between read and write', async () => {
     const id = await insertPart(5, 2);
     const workOrderId = randomUUID();
     await reserve(workOrderId, id, 2);
@@ -166,7 +158,7 @@ describe('Consume reserved stock (E2E)', () => {
     expect(await ctx.prisma.stockMovement.count()).toBe(0);
   });
 
-  it('keeps reserved_stock non-negative and stock >= reserved_stock', async () => {
+  it('should keep reserved_stock non-negative and stock >= reserved_stock', async () => {
     const id = await insertPart(5, 1);
     const workOrderId = randomUUID();
     await reserve(workOrderId, id, 3);

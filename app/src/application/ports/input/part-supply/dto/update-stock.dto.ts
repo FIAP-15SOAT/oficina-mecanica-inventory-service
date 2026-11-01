@@ -1,7 +1,6 @@
 import { StockMovementType } from '@domain/enums/stock-movement-type.enum';
 
 export interface UpdateStockDto {
-  partSupplyId: string;
   type: StockMovementType;
   quantity: number;
   reason?: string;

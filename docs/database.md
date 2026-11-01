@@ -23,7 +23,7 @@ Enums: `StockMovementType` (`ENTRY`, `EXIT`, `ADJUSTMENT`), `Unit` (`UN`, `KG`, 
 
 ## Cache
 
-Cache-aside por id no Valkey, só do dono: `inventory:service:<id>` e `inventory:part-supply:<id>`, TTL de 12 h (`CACHE_TTL_SECONDS`, padrão 43200), formato com `cacheVersion`. A leitura por id (`GET /:id` e a rota interna) usa o cache; reserva, baixa e exclusão leem o saldo no PostgreSQL dentro da transação. Toda escrita invalida a chave **depois do commit**.
+Cache-aside por id no Valkey, só do dono: `inventory:service:<id>` e `inventory:part-supply:<id>`, TTL de 12 h (`CACHE_TTL_SECONDS`, padrão 43200), formato com `cacheVersion`. A leitura por id (`GET /:id` e a rota interna) usa o cache; reserva, baixa e exclusão leem o saldo no PostgreSQL dentro da transação. Toda escrita num item existente invalida a chave **depois do commit**; a criação não, porque o id é novo e a leitura por id não guarda o 404.
 
 ## Seed
 

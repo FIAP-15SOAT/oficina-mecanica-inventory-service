@@ -4,8 +4,6 @@ export interface ReserveStockInput {
   items: { partSupplyId: string; quantity: number }[];
 }
 
-export type ReserveStockOutcome = 'reserved' | 'insufficient';
-
 export interface IReserveStockUseCase {
-  execute(input: ReserveStockInput): Promise<{ outcome: ReserveStockOutcome }>;
+  execute(input: ReserveStockInput): Promise<void>;
 }

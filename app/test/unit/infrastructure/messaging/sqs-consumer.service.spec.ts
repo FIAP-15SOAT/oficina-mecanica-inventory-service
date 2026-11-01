@@ -143,7 +143,7 @@ describe('SqsConsumerService', () => {
   }
 
   describe('onApplicationBootstrap', () => {
-    it('resolves the queue url from the configured name', async () => {
+    it('should resolve the queue url from the configured name', async () => {
       await service.onApplicationBootstrap();
 
       const command = sqs.send.mock.calls[0][0] as GetQueueUrlCommand;
@@ -165,7 +165,7 @@ describe('SqsConsumerService', () => {
       expect(consumer.start).toHaveBeenCalled();
     });
 
-    it('fails to start with a wrong queue name', () => {
+    it('should fail to start with a wrong queue name', () => {
       const wrongVariable = new ConfigService({
         WORK_ORDER_QUEUE_NAME: 'inventory.fifo',
         MESSAGING_TOPIC_ARN: TOPIC_ARN,
@@ -183,7 +183,7 @@ describe('SqsConsumerService', () => {
       ).toThrow('INVENTORY_QUEUE_NAME');
     });
 
-    it('does not start the consumer when the queue does not exist', async () => {
+    it('should not start the consumer when the queue does not exist', async () => {
       const missingQueue = new Error('The specified queue does not exist.');
       sqs.send.mockRejectedValueOnce(missingQueue);
       (Consumer.create as jest.Mock).mockClear();

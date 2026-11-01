@@ -191,7 +191,7 @@ describe('Outbox (E2E)', () => {
     }
   }
 
-  it('does not publish when the outbox is empty', async () => {
+  it('should not publish when the outbox is empty', async () => {
     const runBatch = jest.spyOn(ctx.app.get(OutboxRelayService), 'runBatch');
 
     await new Promise((resolve) => setTimeout(resolve, OUTBOX_POLL_INTERVAL_MS * 4));
@@ -206,7 +206,7 @@ describe('Outbox (E2E)', () => {
     ).toEqual([]);
   });
 
-  it('publishes in creation order and deletes the row', async () => {
+  it('should publish in creation order and delete the row', async () => {
     const workOrderId = randomUUID();
 
     const { traceparent, messageIds } = await withRelayLock(async () => {
@@ -232,7 +232,7 @@ describe('Outbox (E2E)', () => {
     expect(await messageIdsOf(workOrderId)).toEqual([]);
   });
 
-  it('does not publish a message from a rolled back transaction', async () => {
+  it('should not publish a message from a rolled back transaction', async () => {
     const workOrderId = randomUUID();
 
     const committed = await withRelayLock(async () => {
@@ -264,7 +264,7 @@ describe('Outbox (E2E)', () => {
     expect(publishedIds(workOrderId)).toEqual([committed]);
   });
 
-  it('publishes each message once, in creation order, with two relays running at the same time', async () => {
+  it('should publish each message once, in creation order, with two relays running at the same time', async () => {
     const workOrderId = randomUUID();
 
     const messageIds = await withRelayLock(async () => {

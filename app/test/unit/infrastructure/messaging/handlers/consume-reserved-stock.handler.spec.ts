@@ -23,11 +23,11 @@ describe('ConsumeReservedStockHandler', () => {
   }
 
   beforeEach(() => {
-    useCase = { execute: jest.fn().mockResolvedValue({ consumedItemCount: 1 }) };
+    useCase = { execute: jest.fn().mockResolvedValue(undefined) };
     handler = new ConsumeReservedStockHandler(useCase);
   });
 
-  it('calls the use case with the envelope workOrderId', async () => {
+  it('should call the use case with the envelope workOrderId', async () => {
     const workOrderId = randomUUID();
 
     await handler.handle(envelope(workOrderId));
@@ -35,7 +35,7 @@ describe('ConsumeReservedStockHandler', () => {
     expect(useCase.execute).toHaveBeenCalledWith({ workOrderId });
   });
 
-  it.each([null, ''])('fails without workOrderId in the envelope (%p)', async (missing) => {
+  it.each([null, ''])('should fail without workOrderId in the envelope (%p)', async (missing) => {
     await expect(handler.handle(envelope(missing))).rejects.toThrow(
       'Comando de baixa sem o id da ordem de serviço',
     );
@@ -45,7 +45,7 @@ describe('ConsumeReservedStockHandler', () => {
 });
 
 describe('ConsumeReservedStockPayload', () => {
-  it('accepts an empty payload', async () => {
+  it('should accept an empty payload', async () => {
     const errors = await validate(plainToInstance(ConsumeReservedStockPayload, {}), {
       forbidUnknownValues: false,
     });

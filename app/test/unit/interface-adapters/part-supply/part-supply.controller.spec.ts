@@ -182,10 +182,7 @@ describe('PartSupplyController', () => {
       const result = await controller.updateStock(updated.id, request);
 
       expect(result).toEqual(PartSupplyPresenter.toDataResponse(updated));
-      expect(updateStockUseCase.execute).toHaveBeenCalledWith({
-        partSupplyId: updated.id,
-        ...request,
-      });
+      expect(updateStockUseCase.execute).toHaveBeenCalledWith(updated.id, request);
     });
   });
 

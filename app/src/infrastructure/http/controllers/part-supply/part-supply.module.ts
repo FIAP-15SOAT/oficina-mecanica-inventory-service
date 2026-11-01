@@ -10,7 +10,7 @@ import { UpdateStockUseCase } from '@application/use-cases/part-supply/update-st
 import { IPartSupplyRepository } from '@domain/interfaces/repositories/part-supply.repository.interface';
 import { IUnitOfWork } from '@domain/interfaces/repositories/unit-of-work.interface';
 import { ICache } from '@application/ports/output/services/cache.service.interface';
-import { IQuoteItemUsageClient } from '@application/ports/output/quote-item-usage-client.interface';
+import { IQuoteUsageGateway } from '@application/ports/output/gateways/quotes/quote-usage-gateway.interface';
 import { ILogger } from '@application/ports/output/services/logger.service.interface';
 
 import { PartSupplyController as PartSupplyCleanController } from '@interface-adapters/part-supply/part-supply.controller';
@@ -27,23 +27,17 @@ import { PartSupplyController } from './part-supply.controller';
         unitOfWork: IUnitOfWork,
         cache: ICache,
         logger: ILogger,
-        quoteItemUsage: IQuoteItemUsageClient,
+        quoteUsage: IQuoteUsageGateway,
       ) =>
         new PartSupplyCleanController(
-          new CreatePartSupplyUseCase(partSupplyRepository, cache),
+          new CreatePartSupplyUseCase(partSupplyRepository),
           new FindAllPartsSuppliesUseCase(partSupplyRepository),
           new FindPartSupplyByIdUseCase(partSupplyRepository, cache),
           new UpdatePartSupplyUseCase(partSupplyRepository, cache),
           new UpdateStockUseCase(unitOfWork, cache, logger.forContext(UpdateStockUseCase.name)),
-          new DeletePartSupplyUseCase(partSupplyRepository, quoteItemUsage, cache),
+          new DeletePartSupplyUseCase(partSupplyRepository, quoteUsage, cache),
         ),
-      inject: [
-        'IPartSupplyRepository',
-        'IUnitOfWork',
-        'ICache',
-        'ILogger',
-        'IQuoteItemUsageClient',
-      ],
+      inject: ['IPartSupplyRepository', 'IUnitOfWork', 'ICache', 'ILogger', 'IQuoteUsageGateway'],
     },
   ],
 })

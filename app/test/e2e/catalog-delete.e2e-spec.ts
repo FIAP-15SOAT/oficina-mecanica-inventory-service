@@ -16,7 +16,7 @@ const UNAVAILABLE_MESSAGE =
 const UNKNOWN_ID = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11';
 
 const { inUse, free, malformed } = JSON.parse(
-  readFileSync(join(__dirname, '../contracts/quote-items.json'), 'utf8'),
+  readFileSync(join(__dirname, '../contracts/quote-usage.json'), 'utf8'),
 ) as { inUse: unknown; free: unknown; malformed: unknown };
 
 type OwnerBehavior =
@@ -125,7 +125,7 @@ describe('Catalog delete (E2E)', () => {
 
       await deleteService(id).expect(204);
 
-      expect(owner.requests).toEqual([`/internal/services/${id}/quote-items`]);
+      expect(owner.requests).toEqual([`/internal/services/${id}/quote-usage`]);
       expect(await ctx.prisma.service.count({ where: { id } })).toBe(0);
       await readInternal(`services/${id}`).expect(404);
     });
@@ -209,7 +209,7 @@ describe('Catalog delete (E2E)', () => {
 
       await deletePartSupply(id).expect(204);
 
-      expect(owner.requests).toEqual([`/internal/parts-supplies/${id}/quote-items`]);
+      expect(owner.requests).toEqual([`/internal/parts-supplies/${id}/quote-usage`]);
       expect(await ctx.prisma.partSupply.count({ where: { id } })).toBe(0);
       await readInternal(`parts-supplies/${id}`).expect(404);
     });

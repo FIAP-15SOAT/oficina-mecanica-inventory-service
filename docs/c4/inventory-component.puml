@@ -23,7 +23,7 @@ rectangle "Inventory Service [Container: NestJS 12]" {
   component "Outbox Relay\n[OutboxRelayService, 500 ms, advisory lock]" as relay
   component "Consumidor SQS\n[SqsConsumerService + MessageHandlerRegistry]" as consumer
   component "Adaptador de cache\n[ICache + ValkeyCacheAdapter]" as cache
-  component "Cliente HTTP interno\n[InternalHttpClient, consulta de uso em orçamentos]" as internal
+  component "Gateway de uso em orçamentos\n[QuoteUsageGateway sobre o InternalHttpClient]" as internal
 component "Rotas internas\n[/internal/services e /internal/parts-supplies]" as internalroutes
   component "Logging e telemetria\n[pino, OpenTelemetry]" as obs
 }
@@ -40,7 +40,7 @@ usecases --> catalog
 usecases --> uow
 usecases --> cache
 usecases --> internal
-internal --> workorder : GET /internal/.../quote-items
+internal --> workorder : GET /internal/.../quote-usage
 uow --> pg : SQL (mesma transação)
 relay --> pg : lê e apaga lotes
 relay --> sns : Publish (MessageGroupId)

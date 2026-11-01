@@ -6,7 +6,6 @@ import { inventoryCacheKeys } from '@application/keys/inventory-cache-keys';
 import { ICache } from '@application/ports/output/services/cache.service.interface';
 import { ILogger } from '@application/ports/output/services/logger.service.interface';
 import { PartSupply } from '@domain/entities/part-supply.entity';
-import { StockMovement } from '@domain/entities/stock-movement.entity';
 import { StockMovementType } from '@domain/enums/stock-movement-type.enum';
 import { IUnitOfWork } from '@domain/interfaces/repositories/unit-of-work.interface';
 import { ConcurrencyException } from '@infrastructure/exceptions/concurrency.exception';
@@ -52,18 +51,12 @@ describe('ConsumeReservedStockUseCase', () => {
     repos.partSupply.findByIds.mockResolvedValue(entries.map(([part]) => part));
   }
 
-  function movementsWritten(): StockMovement[] {
-    return repos.stockMovement.createMany.mock.calls[0][0];
-  }
-
-  it('consumes every reservation of the work order', async () => {
+  it('should consume every reservation of the work order', async () => {
     const filter = createMockPartSupply({ stock: 10, reservedStock: 5 });
     const pad = createMockPartSupply({ stock: 4, reservedStock: 4 });
     givenReservations([filter, 3], [pad, 4]);
 
-    const result = await useCase.execute({ workOrderId });
-
-    expect(result).toEqual({ consumedItemCount: 2 });
+    await useCase.execute({ workOrderId });
     expect(repos.partSupply.findByIds).toHaveBeenCalledWith([filter.id, pad.id]);
     expect(filter.stock).toBe(7);
     expect(filter.reservedStock).toBe(2);
@@ -71,7 +64,7 @@ describe('ConsumeReservedStockUseCase', () => {
     expect(pad.reservedStock).toBe(0);
     expect(repos.partSupply.update).toHaveBeenCalledWith(filter);
     expect(repos.partSupply.update).toHaveBeenCalledWith(pad);
-    expect(movementsWritten()).toEqual([
+    expect(repos.stockMovement.createMany.mock.calls[0][0]).toEqual([
       expect.objectContaining({
         partSupplyId: filter.id,
         workOrderId,
@@ -92,10 +85,8 @@ describe('ConsumeReservedStockUseCase', () => {
     expect(repos.outbox.add).not.toHaveBeenCalled();
   });
 
-  it('does nothing when the work order has no reservations', async () => {
-    const result = await useCase.execute({ workOrderId });
-
-    expect(result).toEqual({ consumedItemCount: 0 });
+  it('should do nothing when the work order has no reservations', async () => {
+    await useCase.execute({ workOrderId });
     expect(repos.stockReservation.findByWorkOrderId).toHaveBeenCalledWith(workOrderId);
     expect(repos.partSupply.findByIds).not.toHaveBeenCalled();
     expect(repos.partSupply.update).not.toHaveBeenCalled();
@@ -106,15 +97,15 @@ describe('ConsumeReservedStockUseCase', () => {
     expect(cache.delete).not.toHaveBeenCalled();
   });
 
-  it('is idempotent on a repeated command', async () => {
+  it('should be idempotent on a repeated command', async () => {
     const part = createMockPartSupply({ stock: 5, reservedStock: 2 });
     givenReservations([part, 2]);
 
-    expect(await useCase.execute({ workOrderId })).toEqual({ consumedItemCount: 1 });
+    await useCase.execute({ workOrderId });
 
     repos.stockReservation.findByWorkOrderId.mockResolvedValue([]);
 
-    expect(await useCase.execute({ workOrderId })).toEqual({ consumedItemCount: 0 });
+    await useCase.execute({ workOrderId });
     expect(part.stock).toBe(3);
     expect(part.reservedStock).toBe(0);
     expect(repos.partSupply.update).toHaveBeenCalledTimes(1);
@@ -122,23 +113,26 @@ describe('ConsumeReservedStockUseCase', () => {
     expect(logger.event).toHaveBeenCalledTimes(1);
   });
 
-  it('sums reservations of the same part before consuming', async () => {
+  it('should sum reservations of the same part before consuming', async () => {
     const part = createMockPartSupply({ stock: 10, reservedStock: 5 });
     givenReservations([part, 2], [part, 3]);
 
-    const result = await useCase.execute({ workOrderId });
+    await useCase.execute({ workOrderId });
 
-    expect(result).toEqual({ consumedItemCount: 1 });
+    expect(logger.event).toHaveBeenCalledWith(BUSINESS_EVENTS.STOCK_CONSUMED, {
+      workOrderId,
+      consumedItemCount: 1,
+    });
     expect(repos.partSupply.findByIds).toHaveBeenCalledWith([part.id]);
     expect(repos.partSupply.update).toHaveBeenCalledTimes(1);
     expect(part.stock).toBe(5);
     expect(part.reservedStock).toBe(0);
-    expect(movementsWritten()).toEqual([
+    expect(repos.stockMovement.createMany.mock.calls[0][0]).toEqual([
       expect.objectContaining({ partSupplyId: part.id, quantity: 5 }),
     ]);
   });
 
-  it('propagates a version conflict and leaves reservations untouched', async () => {
+  it('should propagate a version conflict and leave reservations untouched', async () => {
     const part = createMockPartSupply({ stock: 5, reservedStock: 2 });
     givenReservations([part, 2]);
     repos.partSupply.update.mockRejectedValue(
@@ -153,7 +147,7 @@ describe('ConsumeReservedStockUseCase', () => {
     expect(cache.delete).not.toHaveBeenCalled();
   });
 
-  it('logs and clears the cache only after the transaction commits', async () => {
+  it('should log and clear the cache only after the transaction commits', async () => {
     const first = createMockPartSupply({ stock: 10, reservedStock: 1 });
     const second = createMockPartSupply({ stock: 10, reservedStock: 2 });
     givenReservations([first, 1], [second, 2]);
@@ -182,14 +176,14 @@ describe('ConsumeReservedStockUseCase', () => {
     ]);
   });
 
-  it('does not log or clear the cache when nothing was consumed', async () => {
+  it('should not log or clear the cache when nothing was consumed', async () => {
     await useCase.execute({ workOrderId });
 
     expect(logger.event).not.toHaveBeenCalled();
     expect(cache.delete).not.toHaveBeenCalled();
   });
 
-  it('does not log or clear the cache when the transaction fails', async () => {
+  it('should not log or clear the cache when the transaction fails', async () => {
     unitOfWork.executeTransaction.mockRejectedValue(new Error('connection lost'));
 
     await expect(useCase.execute({ workOrderId })).rejects.toThrow('connection lost');
