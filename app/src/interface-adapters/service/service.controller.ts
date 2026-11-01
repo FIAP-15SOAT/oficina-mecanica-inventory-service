@@ -45,7 +45,7 @@ export class ServiceController {
     return ServicePresenter.toDataResponse(service);
   }
 
-  async delete(id: string): Promise<void> {
+  async remove(id: string): Promise<void> {
     await this.deleteServiceUseCase.execute(id);
   }
 }

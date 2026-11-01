@@ -118,11 +118,11 @@ describe('ServiceController', () => {
     });
   });
 
-  describe('delete', () => {
+  describe('remove', () => {
     it('should run the use case and return nothing', async () => {
       deleteUseCase.execute.mockResolvedValue(undefined);
 
-      await expect(controller.delete('svc-1')).resolves.toBeUndefined();
+      await expect(controller.remove('svc-1')).resolves.toBeUndefined();
       expect(deleteUseCase.execute).toHaveBeenCalledWith('svc-1');
     });
   });

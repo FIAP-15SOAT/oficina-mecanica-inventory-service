@@ -45,8 +45,8 @@ describe('PartSupplyController', () => {
       findAllUseCase,
       findByIdUseCase,
       updateUseCase,
-      updateStockUseCase,
       deleteUseCase,
+      updateStockUseCase,
     );
   });
 
@@ -186,11 +186,11 @@ describe('PartSupplyController', () => {
     });
   });
 
-  describe('delete', () => {
+  describe('remove', () => {
     it('should run the use case and return nothing', async () => {
       deleteUseCase.execute.mockResolvedValue(undefined);
 
-      await expect(controller.delete('part-1')).resolves.toBeUndefined();
+      await expect(controller.remove('part-1')).resolves.toBeUndefined();
       expect(deleteUseCase.execute).toHaveBeenCalledWith('part-1');
     });
   });

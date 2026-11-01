@@ -123,7 +123,7 @@ export class ServiceController {
     description:
       'Não foi possível confirmar se o item é usado em orçamentos (dono indisponível ou resposta inválida); nada foi excluído',
   })
-  delete(@Param('id', ParseUUIDPipe) id: string): Promise<void> {
-    return this.controller.delete(id);
+  remove(@Param('id', ParseUUIDPipe) id: string): Promise<void> {
+    return this.controller.remove(id);
   }
 }

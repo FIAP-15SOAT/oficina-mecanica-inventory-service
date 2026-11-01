@@ -22,8 +22,8 @@ export class PartSupplyController {
     private readonly findAllPartsSuppliesUseCase: IFindAllPartsSuppliesUseCase,
     private readonly findPartSupplyByIdUseCase: IFindPartSupplyByIdUseCase,
     private readonly updatePartSupplyUseCase: IUpdatePartSupplyUseCase,
-    private readonly updateStockUseCase: IUpdateStockUseCase,
     private readonly deletePartSupplyUseCase: IDeletePartSupplyUseCase,
+    private readonly updateStockUseCase: IUpdateStockUseCase,
   ) {}
 
   async create(input: CreatePartSupplyRequest): Promise<PartSupplyDataResponse> {
@@ -59,12 +59,12 @@ export class PartSupplyController {
     return PartSupplyPresenter.toDataResponse(partSupply);
   }
 
+  async remove(id: string): Promise<void> {
+    await this.deletePartSupplyUseCase.execute(id);
+  }
+
   async updateStock(id: string, input: UpdateStockRequest): Promise<PartSupplyDataResponse> {
     const partSupply = await this.updateStockUseCase.execute(id, input);
     return PartSupplyPresenter.toDataResponse(partSupply);
-  }
-
-  async delete(id: string): Promise<void> {
-    await this.deletePartSupplyUseCase.execute(id);
   }
 }

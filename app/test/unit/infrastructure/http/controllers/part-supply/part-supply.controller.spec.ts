@@ -131,13 +131,13 @@ describe('PartSupplyController', () => {
     });
   });
 
-  describe('delete', () => {
+  describe('remove', () => {
     it('should delegate to the clean controller', async () => {
       const id = randomUUID();
-      jest.spyOn(cleanController, 'delete').mockResolvedValue(undefined);
+      jest.spyOn(cleanController, 'remove').mockResolvedValue(undefined);
 
-      await expect(httpController.delete(id)).resolves.toBeUndefined();
-      expect(cleanController.delete).toHaveBeenCalledWith(id);
+      await expect(httpController.remove(id)).resolves.toBeUndefined();
+      expect(cleanController.remove).toHaveBeenCalledWith(id);
     });
   });
 });
