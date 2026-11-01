@@ -15,7 +15,7 @@ Quatro workflows do GitHub Actions em `.github/workflows/`, um por responsabilid
 
 ![CI](diagrams/ci-workflow.png)
 
-`Lint`, `Unit Tests` (`npm run test:cov`), `E2E Tests` (`npm run test:e2e:cov`), `Build` (`npm run build` e o smoke do preload de telemetria) e `DB Validation` (`prisma migrate deploy` num PostgreSQL 18 descartável) rodam em paralelo. Só quando todos passam o job `Open Pull Request` abre o PR para a `main` com o GitHub App, se ainda não houver um aberto.
+`Lint`, `Unit Tests` (`npm run test:cov`), `E2E Tests` (`npm run test:e2e:cov`), `Build` (`npm run build` e o smoke do preload de telemetria) e `DB Validation` (`npm run db:reset`, que aplica as migrations do zero e roda o seed num PostgreSQL 18 descartável) rodam em paralelo. Só quando todos passam o job `Open Pull Request` abre o PR para a `main` com o GitHub App, se ainda não houver um aberto.
 
 ## CD
 

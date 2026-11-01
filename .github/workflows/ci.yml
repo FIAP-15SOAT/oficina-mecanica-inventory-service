@@ -99,12 +99,12 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           database-url: ${{ env.PRISMA_GENERATE_DATABASE_URL }}
-      # Ephemeral DB only: migrate deploy proves the migrations apply from empty.
-      # There is no seed yet. The Postgres service container is discarded with
-      # the job; this never touches a real database.
-      - name: Apply migrations to the throwaway database
+      # Ephemeral DB only: db:reset (migrate reset + seed) proves migrations apply
+      # from empty and the seed runs. The Postgres service container is discarded
+      # with the job — this never touches a real database.
+      - name: Reset and seed the throwaway database
         working-directory: app
-        run: npx prisma migrate deploy
+        run: npm run db:reset
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/inventory?schema=public
 

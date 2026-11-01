@@ -121,6 +121,7 @@ Rode a partir de `app/`.
 | `npm run prisma:migrate:prod` | Aplica migrations (`migrate deploy`) |
 | `npm run prisma:seed` | Carrega 25 serviços e 8 peças (`prisma db seed`, idempotente) |
 | `npm run db:setup` | `migrate deploy`, `prisma generate` e seed |
+| `npm run db:reset` | Reseta o banco e roda o seed de novo (só no banco descartável; bloqueado em `production` e `staging`) |
 
 ## Estrutura
 
