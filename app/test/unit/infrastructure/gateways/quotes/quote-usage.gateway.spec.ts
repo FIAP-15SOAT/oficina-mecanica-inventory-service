@@ -21,60 +21,60 @@ const UNAVAILABLE_MESSAGE =
   'Não foi possível confirmar se o item é usado em orçamentos; nada foi excluído, tente novamente mais tarde';
 
 describe('QuoteUsageGateway', () => {
-  let http: jest.Mocked<InternalHttpClient>;
+  let internalHttpClient: jest.Mocked<InternalHttpClient>;
   let logger: jest.Mocked<ILogger>;
   let gateway: QuoteUsageGateway;
 
   beforeEach(() => {
-    http = { request: jest.fn() } as unknown as jest.Mocked<InternalHttpClient>;
+    internalHttpClient = { request: jest.fn() } as unknown as jest.Mocked<InternalHttpClient>;
     logger = createMockLogger();
     gateway = new QuoteUsageGateway(
-      http,
+      internalHttpClient,
       new ConfigService({ QUOTE_ITEMS_SERVICE_URL: BASE_URL }),
       logger,
     );
   });
 
   it('should fail to build when QUOTE_ITEMS_SERVICE_URL is missing', () => {
-    expect(() => new QuoteUsageGateway(http, new ConfigService({}), logger)).toThrow(
+    expect(() => new QuoteUsageGateway(internalHttpClient, new ConfigService({}), logger)).toThrow(
       'QUOTE_ITEMS_SERVICE_URL',
     );
   });
 
   describe('isServiceInUse', () => {
     it('should call the owner with the default timeout and return true when inUse is true', async () => {
-      http.request.mockResolvedValue(contract.inUse);
+      internalHttpClient.request.mockResolvedValue(contract.inUse);
 
       await expect(gateway.isServiceInUse('svc-1')).resolves.toBe(true);
-      expect(http.request).toHaveBeenCalledWith({
+      expect(internalHttpClient.request).toHaveBeenCalledWith({
         method: 'GET',
         url: `${BASE_URL}/internal/services/svc-1/quote-usage`,
       });
     });
 
     it('should return false when inUse is false', async () => {
-      http.request.mockResolvedValue(contract.free);
+      internalHttpClient.request.mockResolvedValue(contract.free);
 
       await expect(gateway.isServiceInUse('svc-1')).resolves.toBe(false);
     });
 
     it('should not duplicate the slash when the base URL ends with one', async () => {
-      http.request.mockResolvedValue(contract.free);
+      internalHttpClient.request.mockResolvedValue(contract.free);
       gateway = new QuoteUsageGateway(
-        http,
+        internalHttpClient,
         new ConfigService({ QUOTE_ITEMS_SERVICE_URL: `${BASE_URL}/` }),
         logger,
       );
 
       await gateway.isServiceInUse('svc-1');
 
-      expect(http.request).toHaveBeenCalledWith(
+      expect(internalHttpClient.request).toHaveBeenCalledWith(
         expect.objectContaining({ url: `${BASE_URL}/internal/services/svc-1/quote-usage` }),
       );
     });
 
     it('should report the specific message when the owner is down', async () => {
-      http.request.mockRejectedValue(new ServiceIntegrationException('down'));
+      internalHttpClient.request.mockRejectedValue(new ServiceIntegrationException('down'));
 
       await expect(gateway.isServiceInUse('svc-1')).rejects.toThrow(
         new ServiceIntegrationException(UNAVAILABLE_MESSAGE),
@@ -85,17 +85,17 @@ describe('QuoteUsageGateway', () => {
 
   describe('isPartSupplyInUse', () => {
     it('should call the owner with the default timeout and return true when inUse is true', async () => {
-      http.request.mockResolvedValue(contract.inUse);
+      internalHttpClient.request.mockResolvedValue(contract.inUse);
 
       await expect(gateway.isPartSupplyInUse('part-1')).resolves.toBe(true);
-      expect(http.request).toHaveBeenCalledWith({
+      expect(internalHttpClient.request).toHaveBeenCalledWith({
         method: 'GET',
         url: `${BASE_URL}/internal/parts-supplies/part-1/quote-usage`,
       });
     });
 
     it('should return false when inUse is false', async () => {
-      http.request.mockResolvedValue(contract.free);
+      internalHttpClient.request.mockResolvedValue(contract.free);
 
       await expect(gateway.isPartSupplyInUse('part-1')).resolves.toBe(false);
     });
@@ -104,7 +104,7 @@ describe('QuoteUsageGateway', () => {
   describe('4xx from the owner', () => {
     it('should translate the rejection into ServiceIntegrationException and log the owner status', async () => {
       const rejection = new ServiceRequestRejectedException(404, 'Rota não encontrada');
-      http.request.mockRejectedValue(rejection);
+      internalHttpClient.request.mockRejectedValue(rejection);
 
       await expect(gateway.isServiceInUse('svc-1')).rejects.toThrow(
         new ServiceIntegrationException(UNAVAILABLE_MESSAGE),
@@ -131,7 +131,7 @@ describe('QuoteUsageGateway', () => {
       ['null body', null],
       ['string body', '<html></html>'],
     ])('should fail with the specific message on %s', async (_label, body) => {
-      http.request.mockResolvedValue(body);
+      internalHttpClient.request.mockResolvedValue(body);
 
       await expect(gateway.isServiceInUse('svc-1')).rejects.toThrow(
         new ServiceIntegrationException(UNAVAILABLE_MESSAGE),

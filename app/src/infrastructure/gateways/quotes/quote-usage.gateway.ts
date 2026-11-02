@@ -16,7 +16,7 @@ export class QuoteUsageGateway implements IQuoteUsageGateway {
   private readonly baseUrl: string;
 
   constructor(
-    private readonly http: InternalHttpClient,
+    private readonly internalHttpClient: InternalHttpClient,
     config: ConfigService,
     @Inject('ILogger') private readonly logger: ILogger,
   ) {
@@ -46,7 +46,7 @@ export class QuoteUsageGateway implements IQuoteUsageGateway {
 
   private async fetchBody(path: string): Promise<unknown> {
     try {
-      return await this.http.request<unknown>({
+      return await this.internalHttpClient.request<unknown>({
         method: 'GET',
         url: `${this.baseUrl}${path}`,
       });
