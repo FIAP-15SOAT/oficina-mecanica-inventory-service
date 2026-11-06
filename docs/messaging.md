@@ -4,7 +4,7 @@ O Inventory participa da Saga de orçamento e de ordem de serviço, orquestrada 
 
 ![Reserva e baixa de estoque por comando](diagrams/stock-sequence.png)
 
-Fonte editável em [`diagrams/src/stock-sequence.drawio`](diagrams/src/stock-sequence.drawio).
+O PNG leva o XML do draw.io embutido: abra-o no draw.io (File > Open) para editar.
 
 ## Envelope
 

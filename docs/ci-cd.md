@@ -46,4 +46,4 @@ Os checks obrigatórios da `main` são `Lint`, `Unit Tests`, `E2E Tests`, `Build
 
 ## Fontes dos diagramas
 
-Os diagramas derivam dos diagramas de CI, CD, SAST e DAST do Work Order (`oficina_mecanica_grupo39/docs/diagrams/`), mantidos o layout e o estilo e adaptados ao Inventory: sem login, token de teste efêmero no DAST, SonarQube Scan v8.3.0, namespace `inventory`, `ecr-oficina-mecanica-inventory` e smoke em `/health/inventory`. Os PNGs em `diagrams/` carregam o XML do draw.io embutido: abra-os no draw.io (File > Open) para editar. Os fontes estão em `diagrams/src/`.
+Os diagramas derivam dos diagramas de CI, CD, SAST e DAST do Work Order (`oficina_mecanica_grupo39/docs/diagrams/`), mantidos o layout e o estilo e adaptados ao Inventory: sem login, token de teste efêmero no DAST, SonarQube Scan v8.3.0, namespace `inventory`, `ecr-oficina-mecanica-inventory` e smoke em `/health/inventory`. Os PNGs em `diagrams/` carregam o XML do draw.io embutido, então são o próprio fonte: abra-os no draw.io (File > Open) para editar.

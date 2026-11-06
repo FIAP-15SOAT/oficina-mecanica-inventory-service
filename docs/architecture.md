@@ -13,13 +13,13 @@ Visão do Inventory Service como está no repositório. As decisões estão nas 
 - [Consulta de uso antes de excluir](#consulta-de-uso-antes-de-excluir)
 - [Autenticação e Swagger](#autenticação-e-swagger)
 - [Exceções por camada](#exceções-por-camada)
-- [Modelo C4](#modelo-c4)
+- [Diagrama de componentes (C4 nível 3)](#diagrama-de-componentes-c4-nível-3)
 
 ## Visão geral
 
 ![Componentes e integrações do Inventory Service](diagrams/inventory-architecture.png)
 
-Fonte editável em [`diagrams/src/inventory-architecture.drawio`](diagrams/src/inventory-architecture.drawio). O serviço é dono do catálogo de serviços, peças e insumos, do saldo, das reservas e das movimentações de estoque. A reserva e a baixa chegam por mensagem ([Mensageria](messaging.md)); o catálogo e a movimentação manual, por HTTP ([API](api.md)).
+O PNG leva o XML do draw.io embutido: abra-o no draw.io (File > Open) para editar. O serviço é dono do catálogo de serviços, peças e insumos, do saldo, das reservas e das movimentações de estoque. A reserva e a baixa chegam por mensagem ([Mensageria](messaging.md)); o catálogo e a movimentação manual, por HTTP ([API](api.md)).
 
 ## Camadas
 
@@ -91,10 +91,8 @@ A porta `ICache` (`get`, `set` com TTL, `delete(keys[])`) tem o adaptador `Valke
 
 Cada camada tem a própria hierarquia de exceções e um `APP_FILTER` global que a traduz em status HTTP: domínio, aplicação, infraestrutura e o `AllExceptionsFilter` para o resto. O corpo de erro é o mesmo em todos os serviços, `{statusCode, error, message}` com a mensagem em português, e nunca carrega stack, host ou texto do driver.
 
-## Modelo C4
+## Diagrama de componentes (C4 nível 3)
 
-O C4 nível 3 (componentes) do serviço está em [c4/README.md](c4/README.md), com o fonte PlantUML em `c4/inventory-component.puml`. Os níveis 1 e 2 da solução ficam no repositório de specs.
+<p align="center"><img src="c4/images/c4-component.png" alt="Diagrama de Componente C4 da API do Inventory: Guards/Segurança, Rotas Internas, Health, Catálogo, Estoque, Gateways, Mensageria, Repositories e Cache, ligados ao PostgreSQL, ao ElastiCache Valkey, ao SNS/SQS FIFO, ao Billing e ao Work Order" width="100%"></p>
 
-![C4 nível 3: componentes do Inventory Service](c4/images/c4-component.png)
-
-Fonte PlantUML em [`c4/inventory-component.puml`](c4/inventory-component.puml); o PNG leva o fonte embutido (como regerar: [c4/README.md](c4/README.md#gerar-a-imagem)).
+A descrição de cada componente e dos elementos externos está em [`docs/c4/`](c4/README.md). Os níveis 1 e 2 do C4 (contexto e containers da solução) ficam no repositório de specs.
