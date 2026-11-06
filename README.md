@@ -1,6 +1,6 @@
 <div align="center">
 
-# Inventory Service
+# 📦 Inventory Service
 
 **Catálogo de serviços, peças e insumos, saldo, reservas e movimentações de estoque da oficina mecânica.**
 
@@ -14,57 +14,45 @@
 
 </div>
 
-## Sobre
+## 📋 Sobre
 
-Serviço NestJS da solução Oficina Mecânica (FIAP 15SOAT), dono do contexto de estoque. É o único cliente do próprio PostgreSQL e do próprio Valkey: nenhum outro serviço lê nem escreve neles.
+Projeto acadêmico da pós-graduação em Arquitetura de Software da FIAP (turma 15SOAT). A solução da oficina mecânica é formada pelos serviços Work Order, Identity, Billing e Inventory, cada um dono do próprio banco e do próprio cache, que conversam por REST interno e por mensagens SNS/SQS FIFO publicadas a partir de um outbox transacional (a tabela onde a mensagem é gravada na mesma transação do dado).
 
-### Responsabilidade do Inventory
+Este repositório é o **Inventory**, dono do estoque da oficina.
 
-- Dono do catálogo de serviços, peças e insumos, do saldo, das reservas e das movimentações de estoque.
-- Consome da fila `inventory.fifo` os comandos `inventory.stock.reserve` (reserva tudo ou nada, idempotente por ordem de serviço) e `inventory.stock.consume` (baixa das reservas) e publica `inventory.stock.reserved` e `inventory.stock.reservation_failed` no tópico `oficina-events.fifo`, sempre por outbox gravado na mesma transação. Detalhes em [Mensageria](docs/messaging.md).
-- Lê por id com cache-aside no Valkey (TTL de 12 h, invalidado depois do commit).
-- Antes de excluir um serviço ou uma peça, pergunta ao dono dos orçamentos (Work Order, `QUOTE_ITEMS_SERVICE_URL`) se o item está em uso.
-- Valida localmente o token RS256 de funcionário emitido pelo Identity e recusa token de cliente.
+- **Catálogo e estoque**: serviços, peças e insumos, com o saldo, as reservas e as movimentações de estoque.
+- **Mensagens**: consome da fila `inventory.fifo` os comandos `inventory.stock.reserve` (reserva tudo ou nada, idempotente por ordem de serviço) e `inventory.stock.consume` (baixa das reservas) e publica `inventory.stock.reserved` e `inventory.stock.reservation_failed` no tópico `oficina-events.fifo`, sempre pelo outbox. Detalhes em [Mensageria](docs/messaging.md).
+- **Cache**: leitura por id no padrão cache-aside (lê do cache e, na falta, do banco) no Valkey, o banco em memória compatível com Redis, com TTL de 12 h e invalidação depois do commit.
+- **Uso em orçamento**: antes de excluir um serviço ou uma peça, pergunta ao dono dos orçamentos (Work Order, `QUOTE_ITEMS_SERVICE_URL`) se o item está em uso.
+- **Autenticação**: só o token de funcionário (JWT RS256 emitido pelo Identity), validado localmente pela chave pública, sem consulta a outro serviço. O token de cliente é recusado.
+- **Entrega**: imagem publicada no Amazon ECR e implantada no Amazon EKS, no namespace `inventory`, pelo próprio CD.
 
-### O que a API expõe
+O Inventory é o único cliente do próprio PostgreSQL e do próprio Valkey: nenhum outro serviço lê nem escreve neles.
 
-Rotas de negócio em `/api`, todas com token de funcionário; o contrato completo está em [Referência da API](docs/api.md).
-
-| Recurso | Rotas | Papéis |
-| --- | --- | --- |
-| Serviços | `POST/GET /api/services`, `GET/PUT/DELETE /api/services/:id` | ADMIN (listagem também ATTENDANT e MECHANIC) |
-| Peças e insumos | `POST/GET /api/parts-supplies`, `GET/PUT/PATCH/DELETE /api/parts-supplies/:id` (`PATCH` movimenta o estoque) | ADMIN; listagem também ATTENDANT e MECHANIC; busca por id e `PATCH` também ATTENDANT |
-| Movimentações | `GET /api/stock-movements` | ADMIN, ATTENDANT |
-| Reservas | `GET /api/stock-reservations` | ADMIN, ATTENDANT |
-| Internas (sem token, só no cluster) | `GET /internal/services/:id`, `GET /internal/parts-supplies/:id` | n/a |
-| Saúde e Swagger | `GET /api/health/live`, `GET /api/health/ready`, `/api/docs`, `/api/docs-json` | Público |
-
-A reserva e a baixa de estoque só acontecem por mensagem, não por HTTP.
-
-## Stack
+## 🧰 Stack
 
 - **Runtime**: Node.js 24 + TypeScript 6
 - **Framework**: NestJS 12
 - **ORM**: Prisma 7 (driver `@prisma/adapter-pg`, client gerado em `app/prisma/generated/`)
 - **Banco de dados**: PostgreSQL 18 (catálogo, estoque, reservas, movimentações e `outbox`)
-- **Mensageria**: Amazon SNS FIFO + SQS FIFO (`@aws-sdk/client-sns`, `@aws-sdk/client-sqs`, `sqs-consumer`) com outbox transacional; LocalStack 4.14.0 em desenvolvimento
-- **Cache**: Valkey 9.1 (ElastiCache no cluster) via `ioredis`, cache-aside
+- **Mensageria**: Amazon SNS FIFO + SQS FIFO (`@aws-sdk/client-sns`, `@aws-sdk/client-sqs`, `sqs-consumer`) com outbox transacional; LocalStack 4.14.0 (emulador local dos serviços AWS) em desenvolvimento
+- **Cache**: Valkey 9.1 (no cluster, o Amazon ElastiCache, o serviço de cache gerenciado da AWS) via `ioredis`, cache-aside
 - **Autenticação**: token de funcionário RS256 validado localmente com `passport-jwt`
 - **Observabilidade**: logs JSON no stdout (`pino` + `nestjs-pino`) e traces e métricas pelo OpenTelemetry
 - **Documentação da API**: Swagger/OpenAPI (`@nestjs/swagger`)
-- **Testes**: Jest 30 (unitários com mocks tipados e E2E com Testcontainers: PostgreSQL 18, Valkey 9.1 e LocalStack 4.14.0)
-- **Qualidade e segurança**: SonarQube Cloud (SAST) e OWASP ZAP (DAST)
+- **Testes**: Jest 30 (unitários com mocks tipados e E2E com Testcontainers, biblioteca que sobe containers Docker descartáveis para os testes: PostgreSQL 18, Valkey 9.1 e LocalStack 4.14.0)
+- **Qualidade e segurança**: SonarQube Cloud (SAST, a análise estática do código) e OWASP ZAP (DAST, o teste dinâmico de segurança contra a API no ar)
 - **Containerização**: Docker (multi-stage `node:24-alpine`) + Docker Compose
-- **Linting**: ESLint 9 + Prettier 3
+- **Linting**: ESLint 10 + Prettier 3
 
-## Pré-requisitos
+## ✅ Pré-requisitos
 
 - Node.js 24.9 ou superior e npm (o `npm ci` deve rodar no Node 24: veja [Testes](docs/testing.md#node-24))
 - Docker com Docker Compose
 - OpenSSL (para gerar o par de chaves RS256 de teste)
 - Git
 
-## Quick start
+## 🚀 Quick Start
 
 Toda a aplicação vive em `app/`, sem `package.json` na raiz do repositório: rode os comandos dentro dela.
 
@@ -101,7 +89,7 @@ A exclusão de serviço ou peça consulta o Work Order em `QUOTE_ITEMS_SERVICE_U
 
 Depois do `up`, a API responde em `http://localhost:3003` e o Swagger em [`http://localhost:3003/api/docs`](http://localhost:3003/api/docs). O passo a passo completo, com as portas dos demais serviços, está em [Como executar localmente](docs/local-setup.md).
 
-## Comandos
+## ⚙️ Comandos
 
 Rode a partir de `app/`.
 
@@ -123,7 +111,48 @@ Rode a partir de `app/`.
 | `npm run db:setup` | `migrate deploy`, `prisma generate` e seed |
 | `npm run db:reset` | Reseta o banco e roda o seed de novo (só no banco descartável; bloqueado em `production` e `staging`) |
 
-## Estrutura
+## 🏛️ Arquitetura
+
+Clean Architecture com quatro camadas e dependências apontando só para dentro. `domain/`, `application/` e `interface-adapters/` não importam NestJS, Prisma, OpenTelemetry, AWS SDK nem `ioredis`, e as regras de importação do ESLint falham o lint na violação. A infraestrutura comum (logging, telemetria, health, mensageria, cache, cliente interno e guard de autenticação) é a mesma dos outros serviços NestJS da solução.
+
+➡️ Detalhes em **[Arquitetura](docs/architecture.md)**.
+
+## 🔌 Rotas
+
+Rotas de negócio em `/api`, todas com token de funcionário; o contrato completo está em [Referência da API](docs/api.md).
+
+| Recurso | Rotas | Papéis |
+| --- | --- | --- |
+| Serviços | `POST/GET /api/services`, `GET/PUT/DELETE /api/services/:id` | ADMIN (listagem também ATTENDANT e MECHANIC) |
+| Peças e insumos | `POST/GET /api/parts-supplies`, `GET/PUT/PATCH/DELETE /api/parts-supplies/:id` (`PATCH` movimenta o estoque) | ADMIN; listagem também ATTENDANT e MECHANIC; busca por id e `PATCH` também ATTENDANT |
+| Movimentações | `GET /api/stock-movements` | ADMIN, ATTENDANT |
+| Reservas | `GET /api/stock-reservations` | ADMIN, ATTENDANT |
+| Internas (sem token, só no cluster) | `GET /internal/services/:id`, `GET /internal/parts-supplies/:id` | n/a |
+| Saúde e Swagger | `GET /api/health/live`, `GET /api/health/ready`, `/api/docs`, `/api/docs-json` | Público |
+
+A reserva e a baixa de estoque só acontecem por mensagem, não por HTTP.
+
+## 🌐 Ecossistema de repositórios
+
+Todos na organização [FIAP-15SOAT](https://github.com/FIAP-15SOAT):
+
+| Repositório | Papel |
+| --- | --- |
+| [`oficina-mecanica-work-order-service`](https://github.com/FIAP-15SOAT/oficina-mecanica-work-order-service) | Serviço Work Order |
+| [`oficina-mecanica-identity-service`](https://github.com/FIAP-15SOAT/oficina-mecanica-identity-service) | Serviço Identity (emite o token de funcionário) |
+| [`oficina-mecanica-billing-service`](https://github.com/FIAP-15SOAT/oficina-mecanica-billing-service) | Serviço Billing |
+| [`oficina-mecanica-inventory-service`](https://github.com/FIAP-15SOAT/oficina-mecanica-inventory-service) | Este serviço |
+| [`oficina-mecanica-lambda-customer-auth`](https://github.com/FIAP-15SOAT/oficina-mecanica-lambda-customer-auth) | Lambda de login do cliente |
+| [`oficina-mecanica-lambda-notification`](https://github.com/FIAP-15SOAT/oficina-mecanica-lambda-notification) | Lambda de envio de e-mail |
+| [`oficina-mecanica-infra-base`](https://github.com/FIAP-15SOAT/oficina-mecanica-infra-base) | Rede e scripts de ambiente |
+| [`oficina-mecanica-infra-k8s`](https://github.com/FIAP-15SOAT/oficina-mecanica-infra-k8s) | EKS, namespaces, ECR e NLB |
+| [`oficina-mecanica-infra-messaging`](https://github.com/FIAP-15SOAT/oficina-mecanica-infra-messaging) | SNS e SQS FIFO |
+| [`oficina-mecanica-infra-database-inventory`](https://github.com/FIAP-15SOAT/oficina-mecanica-infra-database-inventory) | RDS e ElastiCache deste serviço |
+| [`oficina-mecanica-api-gateway`](https://github.com/FIAP-15SOAT/oficina-mecanica-api-gateway) | API Gateway |
+| [`oficina-mecanica-custom-monitoring`](https://github.com/FIAP-15SOAT/oficina-mecanica-custom-monitoring) | Dashboards e monitores do Datadog |
+| [`oficina-mecanica-specs`](https://github.com/FIAP-15SOAT/oficina-mecanica-specs) | Arquitetura e changes OpenSpec |
+
+## 📁 Estrutura do repositório
 
 ```text
 oficina-mecanica-inventory-service/
@@ -146,14 +175,14 @@ oficina-mecanica-inventory-service/
 ├── collections/                    # collection e environment do Postman
 ├── docs/
 │   ├── adr/                        # decisões arquiteturais
-│   ├── c4/                         # C4 nível 3 em PlantUML
+│   ├── c4/                         # C4 nível 3 (componentes)
 │   └── diagrams/                   # arquitetura, sequência de estoque e pipelines
 ├── .github/workflows/              # CI, CD, SAST e DAST
 ├── .zap/rules.tsv                  # regras do OWASP ZAP
 └── README.md
 ```
 
-## Documentação
+## 📚 Documentação
 
 | Documento | Conteúdo |
 | --- | --- |
@@ -169,7 +198,7 @@ oficina-mecanica-inventory-service/
 | Swagger | `http://localhost:3003/api/docs` (local) e `http://localhost:3003/api/docs-json` |
 | [SonarQube Cloud](https://sonarcloud.io/project/overview?id=FIAP-15SOAT_oficina-mecanica-inventory-service) | Projeto `FIAP-15SOAT_oficina-mecanica-inventory-service` |
 
-### ADRs
+### Decisões de arquitetura (ADRs)
 
 - [0001 Clean Architecture em camadas](docs/adr/0001-clean-architecture-em-camadas.md)
 - [0002 Pipelines de CI, CD, SAST e DAST, com rollback e JWT de teste](docs/adr/0002-pipelines-ci-cd-sast-dast-com-rollback.md)
@@ -178,26 +207,13 @@ oficina-mecanica-inventory-service/
 - [0005 Mensageria SNS/SQS FIFO com outbox transacional](docs/adr/0005-mensageria-sns-sqs-fifo-com-outbox.md)
 - [0006 Cache do dono no ElastiCache](docs/adr/0006-cache-do-dono-no-elasticache.md)
 
-## Ecossistema de repositórios
+## 👥 Autores
 
-Todos na organização [FIAP-15SOAT](https://github.com/FIAP-15SOAT):
+- [Guilherme da Rocha Salvador](https://github.com/guilhermesalvador404)
+- [Lucas Almeida da Silva](https://github.com/lucas-almeida-silva)
+- [Ramoon Lincoln Barros Camacho](https://github.com/ramooncamacho)
+- [Renan Santana Camacho](https://github.com/renancamacho)
 
-| Repositório | Papel |
-| --- | --- |
-| [`oficina-mecanica-work-order-service`](https://github.com/FIAP-15SOAT/oficina-mecanica-work-order-service) | Serviço Work Order |
-| [`oficina-mecanica-identity-service`](https://github.com/FIAP-15SOAT/oficina-mecanica-identity-service) | Serviço Identity (emite o token de funcionário) |
-| [`oficina-mecanica-billing-service`](https://github.com/FIAP-15SOAT/oficina-mecanica-billing-service) | Serviço Billing |
-| [`oficina-mecanica-inventory-service`](https://github.com/FIAP-15SOAT/oficina-mecanica-inventory-service) | Este serviço |
-| [`oficina-mecanica-lambda-customer-auth`](https://github.com/FIAP-15SOAT/oficina-mecanica-lambda-customer-auth) | Lambda de login do cliente |
-| [`oficina-mecanica-lambda-notification`](https://github.com/FIAP-15SOAT/oficina-mecanica-lambda-notification) | Lambda de envio de e-mail |
-| [`oficina-mecanica-infra-base`](https://github.com/FIAP-15SOAT/oficina-mecanica-infra-base) | Rede e scripts de ambiente |
-| [`oficina-mecanica-infra-k8s`](https://github.com/FIAP-15SOAT/oficina-mecanica-infra-k8s) | EKS, namespaces, ECR e NLB |
-| [`oficina-mecanica-infra-messaging`](https://github.com/FIAP-15SOAT/oficina-mecanica-infra-messaging) | SNS e SQS FIFO |
-| [`oficina-mecanica-infra-database-inventory`](https://github.com/FIAP-15SOAT/oficina-mecanica-infra-database-inventory) | RDS e ElastiCache deste serviço |
-| [`oficina-mecanica-api-gateway`](https://github.com/FIAP-15SOAT/oficina-mecanica-api-gateway) | API Gateway |
-| [`oficina-mecanica-custom-monitoring`](https://github.com/FIAP-15SOAT/oficina-mecanica-custom-monitoring) | Dashboards e monitores do Datadog |
-| [`oficina-mecanica-specs`](https://github.com/FIAP-15SOAT/oficina-mecanica-specs) | Arquitetura e changes OpenSpec |
-
-## Licença
+## 📄 Licença
 
 Projeto acadêmico (FIAP, 15SOAT), para fins educacionais. Sem licença aberta declarada (`UNLICENSED`).
