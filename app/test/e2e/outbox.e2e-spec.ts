@@ -105,7 +105,7 @@ describe('Outbox (E2E)', () => {
     propagation.disable();
   });
 
-  function publishedIds(workOrderId: string): string[] {
+  function findPublishedMessageIdsByWorkOrderId(workOrderId: string): string[] {
     return published
       .filter((input) => JSON.parse(input.Message as string).workOrderId === workOrderId)
       .map((input) => input.MessageDeduplicationId as string);
@@ -156,7 +156,7 @@ describe('Outbox (E2E)', () => {
     return ofGroup();
   }
 
-  function addCommitted(workOrderId: string): Promise<void> {
+  function createOutboxMessage(workOrderId: string): Promise<void> {
     return unitOfWork.executeTransaction((repositories) =>
       repositories.outbox.add({
         type: MESSAGE_TYPE,
@@ -166,7 +166,7 @@ describe('Outbox (E2E)', () => {
     );
   }
 
-  async function messageIdsOf(workOrderId: string): Promise<string[]> {
+  async function findOutboxMessageIdsByWorkOrderId(workOrderId: string): Promise<string[]> {
     const rows = await ctx.prisma.outboxMessage.findMany({
       where: { workOrderId },
       orderBy: { id: 'asc' },
@@ -211,8 +211,8 @@ describe('Outbox (E2E)', () => {
 
     const { traceparent, messageIds } = await withRelayLock(async () => {
       const written = await trace.getTracer('outbox-e2e').startActiveSpan('write', async (span) => {
-        await addCommitted(workOrderId);
-        await addCommitted(workOrderId);
+        await createOutboxMessage(workOrderId);
+        await createOutboxMessage(workOrderId);
         span.end();
 
         const carrier: Record<string, string> = {};
@@ -221,7 +221,10 @@ describe('Outbox (E2E)', () => {
         return carrier.traceparent;
       });
 
-      return { traceparent: written, messageIds: await messageIdsOf(workOrderId) };
+      return {
+        traceparent: written,
+        messageIds: await findOutboxMessageIdsByWorkOrderId(workOrderId),
+      };
     });
 
     const received = await waitForDelivered(workOrderId, 2);
@@ -229,7 +232,7 @@ describe('Outbox (E2E)', () => {
     expect(received).toEqual(
       messageIds.map((messageId) => ({ messageId, workOrderId, traceparent })),
     );
-    expect(await messageIdsOf(workOrderId)).toEqual([]);
+    expect(await findOutboxMessageIdsByWorkOrderId(workOrderId)).toEqual([]);
   });
 
   it('should not publish a message from a rolled back transaction', async () => {
@@ -249,10 +252,12 @@ describe('Outbox (E2E)', () => {
       ).rejects.toThrow('rollback');
 
       // With the relay locked out, a row that wrongly committed would still be in the table.
-      expect(await messageIdsOf(workOrderId)).toEqual([]);
+      expect(await findOutboxMessageIdsByWorkOrderId(workOrderId)).toEqual([]);
 
-      await addCommitted(workOrderId);
-      const messageIds = await messageIdsOf(workOrderId);
+      await createOutboxMessage(workOrderId);
+
+      const messageIds = await findOutboxMessageIdsByWorkOrderId(workOrderId);
+
       expect(messageIds).toHaveLength(1);
 
       return messageIds[0];
@@ -261,7 +266,7 @@ describe('Outbox (E2E)', () => {
     const received = await waitForDelivered(workOrderId, 1);
 
     expect(received.map((message) => message.messageId)).toEqual([committed]);
-    expect(publishedIds(workOrderId)).toEqual([committed]);
+    expect(findPublishedMessageIdsByWorkOrderId(workOrderId)).toEqual([committed]);
   });
 
   it('should publish each message once, in creation order, with two relays running at the same time', async () => {
@@ -269,10 +274,10 @@ describe('Outbox (E2E)', () => {
 
     const messageIds = await withRelayLock(async () => {
       for (let index = 0; index < 15; index++) {
-        await addCommitted(workOrderId);
+        await createOutboxMessage(workOrderId);
       }
 
-      return messageIdsOf(workOrderId);
+      return findOutboxMessageIdsByWorkOrderId(workOrderId);
     });
 
     // A second replica next to the application's own relay, over the same database and topic.
@@ -285,7 +290,7 @@ describe('Outbox (E2E)', () => {
     );
     const application = ctx.app.get(OutboxRelayService);
     const drain = async (relay: OutboxRelayService) => {
-      while ((await messageIdsOf(workOrderId)).length > 0) {
+      while ((await findOutboxMessageIdsByWorkOrderId(workOrderId)).length > 0) {
         await relay.runBatch();
       }
     };
@@ -294,7 +299,7 @@ describe('Outbox (E2E)', () => {
 
     const received = await waitForDelivered(workOrderId, messageIds.length);
 
-    expect(publishedIds(workOrderId)).toEqual(messageIds);
+    expect(findPublishedMessageIdsByWorkOrderId(workOrderId)).toEqual(messageIds);
     expect(received.map((message) => message.messageId)).toEqual(messageIds);
   });
 });
