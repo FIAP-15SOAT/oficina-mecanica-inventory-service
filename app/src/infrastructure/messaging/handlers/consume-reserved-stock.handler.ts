@@ -11,6 +11,6 @@ export class ConsumeReservedStockHandler {
       throw new BadRequestException('Comando de baixa sem o id da ordem de serviço');
     }
 
-    await this.consumeReservedStock.execute({ workOrderId: envelope.workOrderId });
+    await this.consumeReservedStock.execute(envelope.workOrderId);
   };
 }

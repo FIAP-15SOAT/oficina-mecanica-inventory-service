@@ -1,8 +1,4 @@
-export interface ReserveStockInput {
-  workOrderId: string;
-  quoteId: string;
-  items: { partSupplyId: string; quantity: number }[];
-}
+import { ReserveStockInput } from './dto/reserve-stock.dto';
 
 export interface IReserveStockUseCase {
   execute(input: ReserveStockInput): Promise<void>;

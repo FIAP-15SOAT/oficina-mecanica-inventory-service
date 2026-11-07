@@ -2,10 +2,8 @@ import { PartSupply } from '@domain/entities/part-supply.entity';
 import { StockReservation } from '@domain/entities/stock-reservation.entity';
 import { IRepositories, IUnitOfWork } from '@domain/interfaces/repositories/unit-of-work.interface';
 import { MessagePayloads } from '@domain/messaging/message-catalog';
-import {
-  IReserveStockUseCase,
-  ReserveStockInput,
-} from '@application/ports/input/stock/reserve-stock.use-case.interface';
+import { IReserveStockUseCase } from '@application/ports/input/stock/reserve-stock.use-case.interface';
+import { ReserveStockInput } from '@application/ports/input/stock/dto/reserve-stock.dto';
 import { ICache } from '@application/ports/output/services/cache.service.interface';
 import { ILogger } from '@application/ports/output/services/logger.service.interface';
 import { IMetrics } from '@application/ports/output/services/metrics.service.interface';

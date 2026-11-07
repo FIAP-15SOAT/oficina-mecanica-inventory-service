@@ -32,7 +32,7 @@ describe('ConsumeReservedStockHandler', () => {
 
     await handler.handle(envelope(workOrderId));
 
-    expect(useCase.execute).toHaveBeenCalledWith({ workOrderId });
+    expect(useCase.execute).toHaveBeenCalledWith(workOrderId);
   });
 
   it.each([null, ''])('should fail without workOrderId in the envelope (%p)', async (missing) => {

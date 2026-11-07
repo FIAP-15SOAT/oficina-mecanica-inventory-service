@@ -2,10 +2,7 @@ import { PartSupply } from '@domain/entities/part-supply.entity';
 import { StockMovement } from '@domain/entities/stock-movement.entity';
 import { StockMovementType } from '@domain/enums/stock-movement-type.enum';
 import { IRepositories, IUnitOfWork } from '@domain/interfaces/repositories/unit-of-work.interface';
-import {
-  ConsumeReservedStockInput,
-  IConsumeReservedStockUseCase,
-} from '@application/ports/input/stock/consume-reserved-stock.use-case.interface';
+import { IConsumeReservedStockUseCase } from '@application/ports/input/stock/consume-reserved-stock.use-case.interface';
 import { ICache } from '@application/ports/output/services/cache.service.interface';
 import { ILogger } from '@application/ports/output/services/logger.service.interface';
 import { BUSINESS_EVENTS } from '@application/logging/business-event.catalog';
@@ -18,7 +15,7 @@ export class ConsumeReservedStockUseCase implements IConsumeReservedStockUseCase
     private readonly logger: ILogger,
   ) {}
 
-  async execute({ workOrderId }: ConsumeReservedStockInput): Promise<void> {
+  async execute(workOrderId: string): Promise<void> {
     const consumedPartIds = await this.unitOfWork.executeTransaction((repos) =>
       this.consume(repos, workOrderId),
     );
