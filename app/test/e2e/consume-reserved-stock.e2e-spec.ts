@@ -59,7 +59,7 @@ describe('Consume reserved stock (E2E)', () => {
     await reserve(workOrderId, first, 3);
     await reserve(workOrderId, second, 4);
 
-    await useCase.execute({ workOrderId });
+    await useCase.execute(workOrderId);
     expect(await part(first)).toEqual(expect.objectContaining({ stock: 7, reservedStock: 2 }));
     expect(await part(second)).toEqual(expect.objectContaining({ stock: 0, reservedStock: 0 }));
     expect(
@@ -94,8 +94,8 @@ describe('Consume reserved stock (E2E)', () => {
     const workOrderId = randomUUID();
     await reserve(workOrderId, id, 2);
 
-    await useCase.execute({ workOrderId });
-    await useCase.execute({ workOrderId });
+    await useCase.execute(workOrderId);
+    await useCase.execute(workOrderId);
     expect(await part(id)).toEqual(expect.objectContaining({ stock: 3, reservedStock: 0 }));
     expect(await ctx.prisma.stockMovement.count()).toBe(1);
   });
@@ -103,7 +103,7 @@ describe('Consume reserved stock (E2E)', () => {
   it('should have no effect for a work order without reservations', async () => {
     const id = await insertPart(5, 2);
 
-    await useCase.execute({ workOrderId: randomUUID() });
+    await useCase.execute(randomUUID());
     expect(await part(id)).toEqual(expect.objectContaining({ stock: 5, reservedStock: 2 }));
     expect(await ctx.prisma.stockMovement.count()).toBe(0);
   });
@@ -114,7 +114,7 @@ describe('Consume reserved stock (E2E)', () => {
     await reserve(workOrderId, id, 2);
     await reserve(workOrderId, id, 3);
 
-    await useCase.execute({ workOrderId });
+    await useCase.execute(workOrderId);
     expect(await part(id)).toEqual(
       expect.objectContaining({ stock: 5, reservedStock: 0, version: 2 }),
     );
@@ -151,7 +151,7 @@ describe('Consume reserved stock (E2E)', () => {
       createMockLogger(),
     );
 
-    await expect(racing.execute({ workOrderId })).rejects.toBeInstanceOf(ConcurrencyException);
+    await expect(racing.execute(workOrderId)).rejects.toBeInstanceOf(ConcurrencyException);
 
     expect(await part(id)).toEqual(expect.objectContaining({ stock: 5, reservedStock: 2 }));
     expect(await ctx.prisma.stockReservation.count({ where: { workOrderId } })).toBe(1);
@@ -163,7 +163,7 @@ describe('Consume reserved stock (E2E)', () => {
     const workOrderId = randomUUID();
     await reserve(workOrderId, id, 3);
 
-    await expect(useCase.execute({ workOrderId })).rejects.toThrow(/Reserva insuficiente/);
+    await expect(useCase.execute(workOrderId)).rejects.toThrow(/Reserva insuficiente/);
 
     const stored = await part(id);
     expect(stored.reservedStock).toBeGreaterThanOrEqual(0);
