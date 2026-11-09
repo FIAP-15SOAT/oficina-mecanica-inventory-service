@@ -23,7 +23,7 @@ import { MessageEnvelope } from '@application/messaging/message-envelope';
 import { DECLARED_FIELD_NAMES } from '@infrastructure/logging/field-registry';
 import { MessageHandlerRegistry } from '@infrastructure/messaging/message-handler.registry';
 import { MAX_RECEIVE_COUNT } from '@infrastructure/messaging/sqs-consumer.service';
-import { StockMessagingModule } from '@infrastructure/messaging/stock-messaging.module';
+import { StockMessagingModule } from '@infrastructure/messaging/handlers/stock/stock-messaging.module';
 import { TestContext, setupTestApp, teardownTestApp } from '../helpers/test-app.helper';
 
 // The consumer long polls for 20 s and LocalStack does not always wake that poll when a message

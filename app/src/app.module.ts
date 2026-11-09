@@ -23,7 +23,7 @@ import { StockModule } from './infrastructure/http/controllers/stock/stock.modul
 import { InternalCatalogModule } from './infrastructure/http/controllers/internal/internal-catalog.module';
 import { ClientsModule } from './infrastructure/clients/clients.module';
 import { GatewaysModule } from './infrastructure/gateways/gateways.module';
-import { StockMessagingModule } from './infrastructure/messaging/stock-messaging.module';
+import { StockMessagingModule } from './infrastructure/messaging/handlers/stock/stock-messaging.module';
 
 @Module({
   imports: [
