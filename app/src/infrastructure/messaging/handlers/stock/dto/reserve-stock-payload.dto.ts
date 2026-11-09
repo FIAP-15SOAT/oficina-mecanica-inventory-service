@@ -1,7 +1,7 @@
 import { Type } from 'class-transformer';
 import { ArrayNotEmpty, IsArray, IsInt, IsPositive, IsUUID, ValidateNested } from 'class-validator';
 
-export class ReserveStockItemPayload {
+export class ReserveStockItemPayloadDto {
   @IsUUID('4')
   partSupplyId!: string;
 
@@ -10,13 +10,13 @@ export class ReserveStockItemPayload {
   quantity!: number;
 }
 
-export class ReserveStockPayload {
+export class ReserveStockPayloadDto {
   @IsUUID('4')
   quoteId!: string;
 
   @IsArray()
   @ArrayNotEmpty()
   @ValidateNested({ each: true })
-  @Type(() => ReserveStockItemPayload)
-  items!: ReserveStockItemPayload[];
+  @Type(() => ReserveStockItemPayloadDto)
+  items!: ReserveStockItemPayloadDto[];
 }
