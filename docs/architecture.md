@@ -79,7 +79,7 @@ A porta `ICache` (`get`, `set` com TTL, `delete(keys[])`) tem o adaptador `Valke
 
 ## Consulta de uso antes de excluir
 
-`DELETE` de serviço ou de peça pergunta ao dono dos orçamentos, pelo `IQuoteUsageGateway` (adaptador `QuoteUsageGateway` em `infrastructure/gateways/quotes/`, sobre o `InternalHttpClient`), em `GET /internal/services/:id/quote-usage` e `GET /internal/parts-supplies/:id/quote-usage` (base em `QUOTE_ITEMS_SERVICE_URL`), se o item está em uso. Uma resposta sem `data.inUse` booleano conta como indisponibilidade, nunca como "não usado". Item em uso responde 409; dono fora do ar (rede ou 5xx) responde 503 e nada é excluído; 4xx do dono também responde 503, sem repassar o status nem a mensagem dele (o status vai para o log técnico `quote_usage.rejected`). Os três desfechos de indisponibilidade usam a mesma mensagem, que diz que nada foi excluído e que dá para tentar de novo.
+`DELETE` de serviço ou de peça pergunta ao Billing, dono dos orçamentos, pelo `IQuoteUsageGateway` (adaptador `QuoteUsageGateway` em `infrastructure/gateways/quotes/`, sobre o `InternalHttpClient`), em `GET /internal/services/:id/quote-usage` e `GET /internal/parts-supplies/:id/quote-usage` (base em `QUOTE_ITEMS_SERVICE_URL`), se o item está em uso. Uma resposta sem `data.inUse` booleano conta como indisponibilidade, nunca como "não usado". Item em uso responde 409; dono fora do ar (rede ou 5xx) responde 503 e nada é excluído; 4xx do dono também responde 503, sem repassar o status nem a mensagem dele (o status vai para o log técnico `quote_usage.rejected`). Os três desfechos de indisponibilidade usam a mesma mensagem, que diz que nada foi excluído e que dá para tentar de novo.
 
 ## Autenticação e Swagger
 

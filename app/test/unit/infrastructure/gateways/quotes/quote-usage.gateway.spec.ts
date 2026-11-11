@@ -12,11 +12,13 @@ import { TECHNICAL_EVENTS } from '@infrastructure/logging/technical-event.catalo
 
 import { createMockLogger } from '../../../../helpers/logger-mock.factory';
 
-const contract = JSON.parse(
-  readFileSync(join(__dirname, '../../../../contracts/quote-usage.json'), 'utf8'),
-) as { inUse: unknown; free: unknown; malformed: unknown };
+const inUse: unknown = JSON.parse(
+  readFileSync(join(__dirname, '../../../../contracts/billing/internal-quote-usage.json'), 'utf8'),
+);
 
-const BASE_URL = 'http://work-order-service.work-order.svc.cluster.local:3000';
+const free = { data: { inUse: false } };
+
+const BASE_URL = 'http://billing-service.billing.svc.cluster.local:3000';
 const UNAVAILABLE_MESSAGE =
   'Não foi possível confirmar se o item é usado em orçamentos; nada foi excluído, tente novamente mais tarde';
 
@@ -43,7 +45,7 @@ describe('QuoteUsageGateway', () => {
 
   describe('isServiceInUse', () => {
     it('should call the owner with the default timeout and return true when inUse is true', async () => {
-      internalHttpClient.request.mockResolvedValue(contract.inUse);
+      internalHttpClient.request.mockResolvedValue(inUse);
 
       await expect(gateway.isServiceInUse('svc-1')).resolves.toBe(true);
       expect(internalHttpClient.request).toHaveBeenCalledWith({
@@ -53,13 +55,13 @@ describe('QuoteUsageGateway', () => {
     });
 
     it('should return false when inUse is false', async () => {
-      internalHttpClient.request.mockResolvedValue(contract.free);
+      internalHttpClient.request.mockResolvedValue(free);
 
       await expect(gateway.isServiceInUse('svc-1')).resolves.toBe(false);
     });
 
     it('should not duplicate the slash when the base URL ends with one', async () => {
-      internalHttpClient.request.mockResolvedValue(contract.free);
+      internalHttpClient.request.mockResolvedValue(free);
       gateway = new QuoteUsageGateway(
         internalHttpClient,
         new ConfigService({ QUOTE_ITEMS_SERVICE_URL: `${BASE_URL}/` }),
@@ -85,7 +87,7 @@ describe('QuoteUsageGateway', () => {
 
   describe('isPartSupplyInUse', () => {
     it('should call the owner with the default timeout and return true when inUse is true', async () => {
-      internalHttpClient.request.mockResolvedValue(contract.inUse);
+      internalHttpClient.request.mockResolvedValue(inUse);
 
       await expect(gateway.isPartSupplyInUse('part-1')).resolves.toBe(true);
       expect(internalHttpClient.request).toHaveBeenCalledWith({
@@ -95,7 +97,7 @@ describe('QuoteUsageGateway', () => {
     });
 
     it('should return false when inUse is false', async () => {
-      internalHttpClient.request.mockResolvedValue(contract.free);
+      internalHttpClient.request.mockResolvedValue(free);
 
       await expect(gateway.isPartSupplyInUse('part-1')).resolves.toBe(false);
     });
@@ -123,7 +125,7 @@ describe('QuoteUsageGateway', () => {
 
   describe('owner body without a boolean data.inUse', () => {
     it.each([
-      ['fixture', contract.malformed],
+      ['empty data', { data: {} }],
       ['null data', { data: null }],
       ['string inUse', { data: { inUse: 'true' } }],
       ['numeric inUse', { data: { inUse: 1 } }],

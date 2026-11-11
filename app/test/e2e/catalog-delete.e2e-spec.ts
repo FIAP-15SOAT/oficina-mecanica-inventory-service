@@ -15,16 +15,19 @@ const UNAVAILABLE_MESSAGE =
   'Não foi possível confirmar se o item é usado em orçamentos; nada foi excluído, tente novamente mais tarde';
 const UNKNOWN_ID = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11';
 
-const { inUse, free, malformed } = JSON.parse(
-  readFileSync(join(__dirname, '../contracts/quote-usage.json'), 'utf8'),
-) as { inUse: unknown; free: unknown; malformed: unknown };
+const inUse: unknown = JSON.parse(
+  readFileSync(join(__dirname, '../contracts/billing/internal-quote-usage.json'), 'utf8'),
+);
+
+const free = { data: { inUse: false } };
+const malformed = { data: {} };
 
 type OwnerBehavior =
   | { kind: 'reply'; status: number; body: unknown }
   // Never answers: the client gives up at its 2 s deadline.
   | { kind: 'hang' };
 
-// Stands in for the owner of the quotes (work-order today, Billing later).
+// Stands in for the Billing, owner of the quotes.
 class QuoteOwnerStub {
   readonly requests: string[] = [];
   behavior: OwnerBehavior = { kind: 'reply', status: 200, body: free };

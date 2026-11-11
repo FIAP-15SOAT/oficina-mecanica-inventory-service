@@ -23,7 +23,7 @@ Este repositório é o **Inventory**, dono do estoque da oficina.
 - **Catálogo e estoque**: serviços, peças e insumos, com o saldo, as reservas e as movimentações de estoque.
 - **Mensagens**: consome da fila `inventory.fifo` os comandos `inventory.stock.reserve` (reserva tudo ou nada, idempotente por ordem de serviço) e `inventory.stock.consume` (baixa das reservas) e publica `inventory.stock.reserved` e `inventory.stock.reservation_failed` no tópico `oficina-events.fifo`, sempre pelo outbox. Detalhes em [Mensageria](docs/messaging.md).
 - **Cache**: leitura por id no padrão cache-aside (lê do cache e, na falta, do banco) no Valkey, o banco em memória compatível com Redis, com TTL de 12 h e invalidação depois do commit.
-- **Uso em orçamento**: antes de excluir um serviço ou uma peça, pergunta ao dono dos orçamentos (Work Order, `QUOTE_ITEMS_SERVICE_URL`) se o item está em uso.
+- **Uso em orçamento**: antes de excluir um serviço ou uma peça, pergunta ao Billing, dono dos orçamentos (`QUOTE_ITEMS_SERVICE_URL`), se o item está em uso.
 - **Autenticação**: só o token de funcionário (JWT RS256 emitido pelo Identity), validado localmente pela chave pública, sem consulta a outro serviço. O token de cliente é recusado.
 - **Entrega**: imagem publicada no Amazon ECR e implantada no Amazon EKS, no namespace `inventory`, pelo próprio CD.
 
@@ -85,7 +85,7 @@ curl -i http://localhost:3003/api/health/ready
 docker compose down -v
 ```
 
-A exclusão de serviço ou peça consulta o Work Order em `QUOTE_ITEMS_SERVICE_URL`; o compose já aponta para `http://host.docker.internal:3000` (o Work Order rodando na máquina) e, sem ele no ar, a exclusão responde 503 ([detalhes](docs/local-setup.md#api-na-máquina)). Para popular o catálogo local, rode `npm run db:setup` a partir de `app/` com a `DATABASE_URL` do `.env` (o banco do compose escuta em `localhost:5435`).
+A exclusão de serviço ou peça consulta o Billing em `QUOTE_ITEMS_SERVICE_URL`; o compose já aponta para `http://host.docker.internal:3002` (o Billing rodando na máquina) e, sem ele no ar, a exclusão responde 503 ([detalhes](docs/local-setup.md#api-na-máquina)). Para popular o catálogo local, rode `npm run db:setup` a partir de `app/` com a `DATABASE_URL` do `.env` (o banco do compose escuta em `localhost:5435`).
 
 Depois do `up`, a API responde em `http://localhost:3003` e o Swagger em [`http://localhost:3003/api/docs`](http://localhost:3003/api/docs). O passo a passo completo, com as portas dos demais serviços, está em [Como executar localmente](docs/local-setup.md).
 

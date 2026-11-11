@@ -28,7 +28,7 @@ Jest com Supertest e **Testcontainers** em `app/test/e2e/`, sem mocks de infraes
 npm run test:e2e
 ```
 
-Suítes atuais: autenticação (guard e estratégia RS256), health (incluindo banco e cache indisponíveis e encerramento gracioso), logging, telemetria, filtro de exceções, outbox (relay e `MessageGroupId`), mensageria (consumo, DLQ e propagação de contexto) e as de negócio (serviços, peças, estoque, rotas internas e mensageria de estoque). O token de teste é assinado por `app/test/helpers/staff-jwt.helper.ts` com um par RS256 gerado em memória a cada execução; nenhuma chave é versionada.
+Suítes atuais: autenticação (guard e estratégia RS256), health (incluindo banco e cache indisponíveis e encerramento gracioso), logging, telemetria, filtro de exceções, outbox (relay e `MessageGroupId`), mensageria (consumo, DLQ e propagação de contexto) e as de negócio (serviços, peças, estoque, rotas internas e mensageria de estoque). A suíte de exclusão de serviço e peça (`catalog-delete.e2e-spec.ts`) troca o Billing por um servidor HTTP local que responde `GET /internal/services/:id/quote-usage` e `GET /internal/parts-supplies/:id/quote-usage` com o corpo de `app/test/contracts/billing/internal-quote-usage.json` (item em uso), cópia da fixture que o Billing versiona para essas rotas; as respostas de item livre e fora do formato são montadas no próprio spec. O token de teste é assinado por `app/test/helpers/staff-jwt.helper.ts` com um par RS256 gerado em memória a cada execução; nenhuma chave é versionada.
 
 ## Por que os e2e do kit têm rotas de teste
 
@@ -55,7 +55,7 @@ O `engines` do `package.json` exige `node >=24.9`, e o CI roda no Node 24.
 
 Em [`collections/`](../collections) há a collection `inventory-collection.json` e o environment `inventory-environment.json` (Postman v2.1), com health, Swagger, serviços, peças e insumos, movimentações e reservas, validações e as rotas internas. A `baseUrl` é única (`http://localhost:3003`) e a variável `authToken` guarda o token de funcionário `ADMIN`, que você assina com o par RS256 cuja chave pública foi para o `.env` (veja [Como executar localmente](local-setup.md#chave-pública-do-token-de-funcionário)); a collection manda `Authorization: Bearer {{authToken}}`, e só os casos 401 e as rotas internas dispensam o token. Os ids criados pelas requisições ficam no environment durante a execução.
 
-As exclusões esperam 204, então precisam do dono dos orçamentos respondendo em `QUOTE_ITEMS_SERVICE_URL` (veja [Como executar localmente](local-setup.md#api-na-máquina)). Reserva e baixa não têm rota HTTP e são cobertas pelo e2e de mensageria. Importe os dois arquivos no Postman ou rode com Newman contra o stack local:
+As exclusões esperam 204, então precisam do Billing, dono dos orçamentos, respondendo em `QUOTE_ITEMS_SERVICE_URL` (veja [Como executar localmente](local-setup.md#api-na-máquina)). Reserva e baixa não têm rota HTTP e são cobertas pelo e2e de mensageria. Importe os dois arquivos no Postman ou rode com Newman contra o stack local:
 
 ```bash
 # Subir o stack (a partir de app/) e rodar a collection
