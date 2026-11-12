@@ -7,7 +7,7 @@ import { ILogger } from '@application/ports/output/services/logger.service.inter
 import { ServiceRequestRejectedException } from '@application/exceptions/service-request-rejected.exception';
 import { InternalHttpClient } from '@infrastructure/clients/internal-http-client';
 import { ServiceIntegrationException } from '@infrastructure/exceptions/service-integration.exception';
-import { QuoteUsageGateway } from '@infrastructure/gateways/quotes/quote-usage.gateway';
+import { HttpBillingQuoteUsageGateway } from '@infrastructure/gateways/billing/http-billing-quote-usage-gateway';
 import { TECHNICAL_EVENTS } from '@infrastructure/logging/technical-event.catalog';
 
 import { createMockLogger } from '../../../../helpers/logger-mock.factory';
@@ -22,15 +22,15 @@ const BASE_URL = 'http://billing-service.billing.svc.cluster.local:3000';
 const UNAVAILABLE_MESSAGE =
   'Não foi possível confirmar se o item é usado em orçamentos; nada foi excluído, tente novamente mais tarde';
 
-describe('QuoteUsageGateway', () => {
+describe('HttpBillingQuoteUsageGateway', () => {
   let internalHttpClient: jest.Mocked<InternalHttpClient>;
   let logger: jest.Mocked<ILogger>;
-  let gateway: QuoteUsageGateway;
+  let gateway: HttpBillingQuoteUsageGateway;
 
   beforeEach(() => {
     internalHttpClient = { request: jest.fn() } as unknown as jest.Mocked<InternalHttpClient>;
     logger = createMockLogger();
-    gateway = new QuoteUsageGateway(
+    gateway = new HttpBillingQuoteUsageGateway(
       internalHttpClient,
       new ConfigService({ QUOTE_ITEMS_SERVICE_URL: BASE_URL }),
       logger,
@@ -38,9 +38,9 @@ describe('QuoteUsageGateway', () => {
   });
 
   it('should fail to build when QUOTE_ITEMS_SERVICE_URL is missing', () => {
-    expect(() => new QuoteUsageGateway(internalHttpClient, new ConfigService({}), logger)).toThrow(
-      'QUOTE_ITEMS_SERVICE_URL',
-    );
+    expect(
+      () => new HttpBillingQuoteUsageGateway(internalHttpClient, new ConfigService({}), logger),
+    ).toThrow('QUOTE_ITEMS_SERVICE_URL');
   });
 
   describe('isServiceInUse', () => {
@@ -62,7 +62,7 @@ describe('QuoteUsageGateway', () => {
 
     it('should not duplicate the slash when the base URL ends with one', async () => {
       internalHttpClient.request.mockResolvedValue(free);
-      gateway = new QuoteUsageGateway(
+      gateway = new HttpBillingQuoteUsageGateway(
         internalHttpClient,
         new ConfigService({ QUOTE_ITEMS_SERVICE_URL: `${BASE_URL}/` }),
         logger,

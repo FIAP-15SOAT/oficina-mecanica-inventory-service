@@ -34,7 +34,7 @@ O **Catálogo** reúne os Clean Controllers e os casos de uso de serviços e de 
 | **Health** | NestJS Module | `GET /api/health/live` sem I/O e `GET /api/health/ready` com `SELECT 1`, consumidas pelas probes (verificações periódicas) do Kubernetes |
 | **Catálogo** | Clean Controllers · Use Cases | Cadastro, consulta, alteração e exclusão de serviços e de peças e insumos, e o ajuste manual de estoque de uma peça |
 | **Estoque** | Clean Controllers · Use Cases | Consulta de movimentações e reservas, reserva de estoque por ordem de serviço e baixa do que foi reservado |
-| **Gateways** | @nestjs/axios | `QuoteUsageGateway` sobre o `InternalHttpClient`, que consulta o uso de item em orçamento com prazo de 2 s, `x-request-id` e `traceparent` |
+| **Gateways** | @nestjs/axios | `HttpBillingQuoteUsageGateway` sobre o `InternalHttpClient`, que consulta o uso de item em orçamento com prazo de 2 s, `x-request-id` e `traceparent` |
 | **Mensageria** | NestJS Module · AWS SDK | Relay do outbox (rotina que lê o outbox e publica) para o SNS FIFO e consumidor da fila SQS `inventory.fifo`, com o span `CONSUMER` e os handlers de `inventory.stock.reserve` e `inventory.stock.consume` |
 | **Repositories** | Prisma | Catálogo, saldo, reservas e movimentações, peças com `version` (controle de concorrência otimista), Unit of Work e outbox gravado na mesma transação da mudança de estado |
 | **Cache** | NestJS Module · ioredis | Porta `ICache` sobre o Valkey, no padrão cache-aside (lê do cache e, na falta, do banco) para serviço e peça por id, que falha aberto: com o cache fora do ar, a leitura vai ao banco |
