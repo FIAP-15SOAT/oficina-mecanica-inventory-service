@@ -28,7 +28,7 @@ Clean Architecture com regra de dependência única: o código aponta só para d
 | Camada | Pasta (`app/src/`) | Conteúdo hoje | Pode importar |
 | --- | --- | --- | --- |
 | Domínio | `domain/` | Entidades `Service`, `PartSupply`, `StockMovement` e `StockReservation`, enums, catálogo tipado de mensagens (`messaging/`), exceções de domínio, portas de repositório (`IPartSupplyRepository`, `IServiceRepository`, `IStockMovementRepository`, `IStockReservationRepository`, `IOutboxRepository`, `IUnitOfWork`) | Nada de `@nestjs/*`, Prisma nem `@opentelemetry/*` |
-| Aplicação | `application/` | Use cases de `service/`, `part-supply/` e `stock/`, portas de entrada e de saída (`ports/output/services/` com `ICache`, `ILogger` e `IMetrics`, e `ports/output/gateways/quotes/` com `IQuoteUsageGateway`), o principal autenticado em `auth/`, chaves de cache, envelope de mensagem, exceções, catálogos de log e de métricas | Idem |
+| Aplicação | `application/` | Use cases de `service/`, `part-supply/` e `stock/`, portas de entrada e de saída (`ports/output/services/` com `ICache`, `ILogger` e `IMetrics`, e `ports/output/gateways/billing/` com `IBillingQuoteUsageGateway`), o principal autenticado em `auth/`, chaves de cache, envelope de mensagem, exceções, catálogos de log e de métricas | Idem |
 | Adaptadores de interface | `interface-adapters/` | Clean Controllers e Presenters de `service/`, `part-supply/` e `stock/` | Idem |
 | Infraestrutura | `infrastructure/` | Borda HTTP do NestJS, Prisma, mensageria, cache, cliente HTTP interno, logging, telemetria, health | Tudo; só `infrastructure/persistence/prisma/` importa o Prisma |
 
@@ -79,7 +79,7 @@ A porta `ICache` (`get`, `set` com TTL, `delete(keys[])`) tem o adaptador `Valke
 
 ## Consulta de uso antes de excluir
 
-`DELETE` de serviço ou de peça pergunta ao dono dos orçamentos, pelo `IQuoteUsageGateway` (adaptador `QuoteUsageGateway` em `infrastructure/gateways/quotes/`, sobre o `InternalHttpClient`), em `GET /internal/services/:id/quote-usage` e `GET /internal/parts-supplies/:id/quote-usage` (base em `QUOTE_ITEMS_SERVICE_URL`), se o item está em uso. Uma resposta sem `data.inUse` booleano conta como indisponibilidade, nunca como "não usado". Item em uso responde 409; dono fora do ar (rede ou 5xx) responde 503 e nada é excluído; 4xx do dono também responde 503, sem repassar o status nem a mensagem dele (o status vai para o log técnico `quote_usage.rejected`). Os três desfechos de indisponibilidade usam a mesma mensagem, que diz que nada foi excluído e que dá para tentar de novo.
+`DELETE` de serviço ou de peça pergunta ao Billing, dono dos orçamentos, pelo `IBillingQuoteUsageGateway` (adaptador `HttpBillingQuoteUsageGateway` em `infrastructure/gateways/billing/`, sobre o `InternalHttpClient`), em `GET /internal/services/:id/quote-usage` e `GET /internal/parts-supplies/:id/quote-usage` (base em `QUOTE_ITEMS_SERVICE_URL`), se o item está em uso. Uma resposta sem `data.inUse` booleano conta como indisponibilidade, nunca como "não usado". Item em uso responde 409; dono fora do ar (rede ou 5xx) responde 503 e nada é excluído; 4xx do dono também responde 503, sem repassar o status nem a mensagem dele (o status vai para o log técnico `quote_usage.rejected`). Os três desfechos de indisponibilidade usam a mesma mensagem, que diz que nada foi excluído e que dá para tentar de novo.
 
 ## Autenticação e Swagger
 

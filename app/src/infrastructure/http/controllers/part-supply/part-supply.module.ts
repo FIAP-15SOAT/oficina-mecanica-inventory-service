@@ -10,7 +10,7 @@ import { UpdateStockUseCase } from '@application/use-cases/part-supply/update-st
 import { IPartSupplyRepository } from '@domain/interfaces/repositories/part-supply.repository.interface';
 import { IUnitOfWork } from '@domain/interfaces/repositories/unit-of-work.interface';
 import { ICache } from '@application/ports/output/services/cache.service.interface';
-import { IQuoteUsageGateway } from '@application/ports/output/gateways/quotes/quote-usage-gateway.interface';
+import { IBillingQuoteUsageGateway } from '@application/ports/output/gateways/billing/billing-quote-usage-gateway.interface';
 import { ILogger } from '@application/ports/output/services/logger.service.interface';
 
 import { PartSupplyController as PartSupplyCleanController } from '@interface-adapters/part-supply/part-supply.controller';
@@ -27,17 +27,23 @@ import { PartSupplyController } from './part-supply.controller';
         unitOfWork: IUnitOfWork,
         cache: ICache,
         logger: ILogger,
-        quoteUsage: IQuoteUsageGateway,
+        billingQuoteUsageGateway: IBillingQuoteUsageGateway,
       ) =>
         new PartSupplyCleanController(
           new CreatePartSupplyUseCase(partSupplyRepository),
           new FindAllPartsSuppliesUseCase(partSupplyRepository),
           new FindPartSupplyByIdUseCase(partSupplyRepository, cache),
           new UpdatePartSupplyUseCase(partSupplyRepository, cache),
-          new DeletePartSupplyUseCase(partSupplyRepository, quoteUsage, cache),
+          new DeletePartSupplyUseCase(partSupplyRepository, billingQuoteUsageGateway, cache),
           new UpdateStockUseCase(unitOfWork, cache, logger.forContext(UpdateStockUseCase.name)),
         ),
-      inject: ['IPartSupplyRepository', 'IUnitOfWork', 'ICache', 'ILogger', 'IQuoteUsageGateway'],
+      inject: [
+        'IPartSupplyRepository',
+        'IUnitOfWork',
+        'ICache',
+        'ILogger',
+        'IBillingQuoteUsageGateway',
+      ],
     },
   ],
 })

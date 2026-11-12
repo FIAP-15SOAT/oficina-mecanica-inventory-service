@@ -2,7 +2,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
 import { ServiceRequestRejectedException } from '@application/exceptions/service-request-rejected.exception';
-import { IQuoteUsageGateway } from '@application/ports/output/gateways/quotes/quote-usage-gateway.interface';
+import { IBillingQuoteUsageGateway } from '@application/ports/output/gateways/billing/billing-quote-usage-gateway.interface';
 import { ILogger } from '@application/ports/output/services/logger.service.interface';
 import { InternalHttpClient } from '@infrastructure/clients/internal-http-client';
 import { ServiceIntegrationException } from '@infrastructure/exceptions/service-integration.exception';
@@ -12,7 +12,7 @@ const USAGE_CHECK_UNAVAILABLE_MESSAGE =
   'Não foi possível confirmar se o item é usado em orçamentos; nada foi excluído, tente novamente mais tarde';
 
 @Injectable()
-export class QuoteUsageGateway implements IQuoteUsageGateway {
+export class HttpBillingQuoteUsageGateway implements IBillingQuoteUsageGateway {
   private readonly baseUrl: string;
 
   constructor(

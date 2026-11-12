@@ -1,10 +1,10 @@
 import { Global, Module } from '@nestjs/common';
 
-import { QuoteUsageGateway } from './quotes/quote-usage.gateway';
+import { HttpBillingQuoteUsageGateway } from './billing/http-billing-quote-usage-gateway';
 
 @Global()
 @Module({
-  providers: [{ provide: 'IQuoteUsageGateway', useClass: QuoteUsageGateway }],
-  exports: ['IQuoteUsageGateway'],
+  providers: [{ provide: 'IBillingQuoteUsageGateway', useClass: HttpBillingQuoteUsageGateway }],
+  exports: ['IBillingQuoteUsageGateway'],
 })
 export class GatewaysModule {}

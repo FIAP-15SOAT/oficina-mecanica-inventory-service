@@ -8,7 +8,7 @@ import { FindAllServicesPaginatedUseCase } from '@application/use-cases/service/
 
 import { IServiceRepository } from '@domain/interfaces/repositories/service.repository.interface';
 import { ICache } from '@application/ports/output/services/cache.service.interface';
-import { IQuoteUsageGateway } from '@application/ports/output/gateways/quotes/quote-usage-gateway.interface';
+import { IBillingQuoteUsageGateway } from '@application/ports/output/gateways/billing/billing-quote-usage-gateway.interface';
 
 import { ServiceController as ServiceCleanController } from '@interface-adapters/service/service.controller';
 import { ServiceController } from './service.controller';
@@ -22,16 +22,16 @@ import { ServiceController } from './service.controller';
       useFactory: (
         serviceRepository: IServiceRepository,
         cache: ICache,
-        quoteUsage: IQuoteUsageGateway,
+        billingQuoteUsageGateway: IBillingQuoteUsageGateway,
       ) =>
         new ServiceCleanController(
           new CreateServiceUseCase(serviceRepository),
           new FindServiceByIdUseCase(serviceRepository, cache),
           new FindAllServicesPaginatedUseCase(serviceRepository),
           new UpdateServiceUseCase(serviceRepository, cache),
-          new DeleteServiceUseCase(serviceRepository, quoteUsage, cache),
+          new DeleteServiceUseCase(serviceRepository, billingQuoteUsageGateway, cache),
         ),
-      inject: ['IServiceRepository', 'ICache', 'IQuoteUsageGateway'],
+      inject: ['IServiceRepository', 'ICache', 'IBillingQuoteUsageGateway'],
     },
   ],
 })

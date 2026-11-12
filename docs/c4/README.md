@@ -17,14 +17,14 @@ Este diretório documenta a API do Inventory com o [modelo C4](https://c4model.c
 
 ## Nível 3 — Componente da API do Inventory
 
-<p align="center"><img src="images/c4-component.png" alt="Diagrama de Componente C4 da API do Inventory: o Funcionário apresenta o token de funcionário ao componente Guards/Segurança, que encaminha as rotas do catálogo ao Catálogo e as de estoque ao Estoque; o Billing chama as Rotas Internas, que usam os casos de uso do Catálogo; o Catálogo consulta o uso de item em orçamento pelos Gateways, que chamam o Work Order; a Mensageria consome a fila inventory.fifo, entrega a reserva e a baixa ao Estoque e publica o outbox no SNS; Catálogo e Estoque gravam pelos Repositories no PostgreSQL e usam o Cache sobre o ElastiCache Valkey; o Kubernetes consulta o Health, que verifica o banco" width="100%"></p>
+<p align="center"><img src="images/c4-component.png" alt="Diagrama de Componente C4 da API do Inventory: o Funcionário apresenta o token de funcionário ao componente Guards/Segurança, que encaminha as rotas do catálogo ao Catálogo e as de estoque ao Estoque; o Billing chama as Rotas Internas, que usam os casos de uso do Catálogo; o Catálogo consulta o uso de item em orçamento pelos Gateways, que chamam o Billing; o Work Order publica no tópico os comandos de reserva e baixa; a Mensageria consome a fila inventory.fifo, entrega a reserva e a baixa ao Estoque e publica o outbox no SNS; Catálogo e Estoque gravam pelos Repositories no PostgreSQL e usam o Cache sobre o ElastiCache Valkey; o Kubernetes consulta o Health, que verifica o banco" width="100%"></p>
 
 O **Catálogo** reúne os Clean Controllers e os casos de uso de serviços e de peças e insumos. O **Estoque** reúne a consulta de movimentações e reservas e os casos de uso de reserva e baixa. Destaques do fluxo:
 
 - o **Funcionário** apresenta o token emitido pelo Identity ao **Guards / Segurança**, que o valida pela chave pública, sem consultar outro serviço;
 - o **Billing** lê o preço e os dados dos itens pelas **Rotas Internas**, sem token, pela rede do cluster;
-- antes de excluir um serviço ou uma peça, o **Catálogo** pergunta pelos **Gateways** se o item está em uso em orçamento, ao serviço configurado em `QUOTE_ITEMS_SERVICE_URL`, hoje o **Work Order**;
-- a **Mensageria** lê da fila `inventory.fifo` os comandos de reserva e baixa da Saga do Work Order (a sequência de passos entre serviços, orquestrada por ele) e os entrega ao **Estoque**;
+- antes de excluir um serviço ou uma peça, o **Catálogo** pergunta pelos **Gateways** ao **Billing**, dono dos orçamentos, se o item está em uso em orçamento (endereço em `QUOTE_ITEMS_SERVICE_URL`);
+- o **Work Order** publica no tópico os comandos de reserva e baixa da Saga dele (a sequência de passos entre serviços, orquestrada por ele), e a **Mensageria** os lê da fila `inventory.fifo` e os entrega ao **Estoque**;
 - o **Estoque** grava o resultado no outbox (a tabela onde a mensagem é gravada na mesma transação do dado), e a Mensageria o publica no tópico.
 
 | Componente | Tecnologia | Responsabilidade |
@@ -34,7 +34,7 @@ O **Catálogo** reúne os Clean Controllers e os casos de uso de serviços e de 
 | **Health** | NestJS Module | `GET /api/health/live` sem I/O e `GET /api/health/ready` com `SELECT 1`, consumidas pelas probes (verificações periódicas) do Kubernetes |
 | **Catálogo** | Clean Controllers · Use Cases | Cadastro, consulta, alteração e exclusão de serviços e de peças e insumos, e o ajuste manual de estoque de uma peça |
 | **Estoque** | Clean Controllers · Use Cases | Consulta de movimentações e reservas, reserva de estoque por ordem de serviço e baixa do que foi reservado |
-| **Gateways** | @nestjs/axios | `QuoteUsageGateway` sobre o `InternalHttpClient`, que consulta o uso de item em orçamento com prazo de 2 s, `x-request-id` e `traceparent` |
+| **Gateways** | @nestjs/axios | `HttpBillingQuoteUsageGateway` sobre o `InternalHttpClient`, que consulta o uso de item em orçamento com prazo de 2 s, `x-request-id` e `traceparent` |
 | **Mensageria** | NestJS Module · AWS SDK | Relay do outbox (rotina que lê o outbox e publica) para o SNS FIFO e consumidor da fila SQS `inventory.fifo`, com o span `CONSUMER` e os handlers de `inventory.stock.reserve` e `inventory.stock.consume` |
 | **Repositories** | Prisma | Catálogo, saldo, reservas e movimentações, peças com `version` (controle de concorrência otimista), Unit of Work e outbox gravado na mesma transação da mudança de estado |
 | **Cache** | NestJS Module · ioredis | Porta `ICache` sobre o Valkey, no padrão cache-aside (lê do cache e, na falta, do banco) para serviço e peça por id, que falha aberto: com o cache fora do ar, a leitura vai ao banco |
@@ -42,8 +42,8 @@ O **Catálogo** reúne os Clean Controllers e os casos de uso de serviços e de 
 | Elemento externo | Tipo | Papel |
 |---|---|---|
 | **Funcionário** | Pessoa | Administrador, mecânico ou atendente, com o token emitido pelo Identity |
-| **Billing** | Sistema externo | Serviço de orçamentos: lê o preço e os dados dos itens do catálogo |
-| **Work Order** | Sistema externo | Dono das ordens de serviço: envia os comandos de reserva e baixa e responde se um item está em uso em orçamento |
+| **Billing** | Sistema externo | Dono dos orçamentos: lê o preço e os dados dos itens do catálogo e responde se um item está em uso em orçamento |
+| **Work Order** | Sistema externo | Dono das ordens de serviço: publica no tópico os comandos de reserva e baixa |
 | **Kubernetes** | Sistema externo | Executa as probes de inicialização, vivacidade e prontidão do pod |
 | **Banco de Dados** | Container externo | Amazon RDS PostgreSQL 18 do Inventory, com `services`, `parts_supplies`, `stock_movements`, `stock_reservations` e `outbox` |
 | **Cache Distribuído** | Container externo | Amazon ElastiCache Valkey 9.1 do Inventory (Valkey é o banco em memória compatível com Redis) |

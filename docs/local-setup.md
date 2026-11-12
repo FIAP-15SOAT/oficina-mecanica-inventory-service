@@ -39,7 +39,7 @@ Veja `app/.env.example`. As principais:
 | `MESSAGING_TOPIC_ARN` | `arn:aws:sns:us-east-1:000000000000:oficina-events.fifo` | Tópico de publicação |
 | `CACHE_URL` | `redis://:valkey@localhost:6382` | Valkey (`rediss://` no cluster) |
 | `CACHE_TTL_SECONDS` | `43200` | TTL das entradas |
-| `QUOTE_ITEMS_SERVICE_URL` | `http://localhost:3000` (no compose é fixo em `http://host.docker.internal:3000`) | Dono dos orçamentos (Work Order), consultado antes de excluir serviço ou peça; obrigatória, a API não sobe sem ela |
+| `QUOTE_ITEMS_SERVICE_URL` | `http://localhost:3002` (no compose é fixo em `http://host.docker.internal:3002`) | Dono dos orçamentos (Billing), consultado antes de excluir serviço ou peça; obrigatória, a API não sobe sem ela |
 | `LOG_LEVEL` | `info` | `fatal` a `trace` ou `silent` |
 
 ## Chave pública do token de funcionário
@@ -103,7 +103,7 @@ npm run start:dev
 
 O `.env` precisa ter `STAFF_JWT_PUBLIC_KEY` (seção anterior).
 
-A exclusão de serviço ou peça consulta o Work Order. Com a API na máquina, o `.env` usa `QUOTE_ITEMS_SERVICE_URL=http://localhost:3000`; o compose já aponta o container para `http://host.docker.internal:3000`, o Work Order rodando na máquina, sem depender do `.env`. Sem o Work Order no ar, `DELETE` responde 503 e nada é excluído.
+A exclusão de serviço ou peça consulta o Billing, dono dos orçamentos. Com a API na máquina, o `.env` usa `QUOTE_ITEMS_SERVICE_URL=http://localhost:3002`; o compose já aponta o container para `http://host.docker.internal:3002`, o Billing rodando na máquina, sem depender do `.env`. Sem o Billing no ar, `DELETE` responde 503 e nada é excluído.
 
 ## Dados iniciais (seed)
 
