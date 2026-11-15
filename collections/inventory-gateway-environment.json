@@ -1,0 +1,49 @@
+{
+  "id": "inventory-local-gateway",
+  "name": "Inventory · Gateway",
+  "values": [
+    {
+      "key": "baseUrl",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "identityBaseUrl",
+      "value": "{{baseUrl}}",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "healthPath",
+      "value": "health/inventory",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "openApiPath",
+      "value": "docs/inventory",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "adminPassword",
+      "value": "Tech@2026",
+      "type": "secret",
+      "enabled": true
+    },
+    {
+      "key": "adminEmail",
+      "value": "guilhermedarochasalvador@gmail.com",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "authToken",
+      "value": "",
+      "type": "secret",
+      "enabled": true
+    }
+  ],
+  "_postman_variable_scope": "environment"
+}

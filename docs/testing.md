@@ -53,21 +53,38 @@ O `engines` do `package.json` exige `node >=24.9`, e o CI roda no Node 24.
 
 ## Postman e Newman
 
-Em [`collections/`](../collections) há a collection `inventory-collection.json` e o environment `inventory-environment.json` (Postman v2.1), com health, login, Swagger, serviços, peças e insumos, movimentações e reservas e validações. A collection roda contra o API Gateway, a porta pública da solução, que encaminha cada prefixo de rota ao serviço dono. No gateway, `/api/health/*` e `/api/docs*` são do Work Order: por isso a saúde e o documento OpenAPI do Inventory ficam em `/health/inventory` e `/docs/inventory`. As rotas `/internal/...` não passam pelo gateway e não estão na collection: os testes E2E e as fixtures de contrato as cobrem. A `baseUrl` é a URL do API Gateway, que muda a cada subida do ambiente; o [manual de demonstração](https://github.com/FIAP-15SOAT/oficina-mecanica-work-order-service/blob/main/docs/demo-manual.md#url-pública-e-variáveis) mostra como lê-la. A pasta Autenticação faz o login do funcionário no Identity com `adminEmail` e `adminPassword` (um `ADMIN` do seed) e grava o token em `authToken`; a collection manda `Authorization: Bearer {{authToken}}`, e só o login, os casos 401, a saúde e o Swagger dispensam o token. Os ids criados pelas requisições ficam no environment durante a execução.
+Em [`collections/`](../collections) há a collection `inventory-collection.json` e dois environments (Postman v2.1), com health, login, Swagger, serviços, peças e insumos, movimentações e reservas e validações. A mesma collection roda contra o stack local ou contra o ambiente implantado, pelo API Gateway, a porta pública da solução, que encaminha cada prefixo de rota ao serviço dono; para trocar de um para o outro, troque só o environment:
 
-As exclusões esperam 204, então precisam do Billing, dono dos orçamentos, respondendo à consulta de uso dos itens. Reserva e baixa não têm rota HTTP e são cobertas pelo e2e de mensageria. Importe os dois arquivos no Postman ou rode com Newman, com o ambiente no ar:
+| Environment | Arquivo | Para quê |
+| --- | --- | --- |
+| **Inventory · Local** | `inventory-environment.json` | O stack local do Inventory, com o Identity e o Billing locais |
+| **Inventory · Gateway** | `inventory-gateway-environment.json` | O ambiente implantado, pelo API Gateway |
+
+Os dois diferem só nestas variáveis:
+
+| Variável | Local | Gateway |
+| --- | --- | --- |
+| `baseUrl` | `http://localhost:3003` | A URL do API Gateway, que muda a cada subida do ambiente; o [manual de demonstração](https://github.com/FIAP-15SOAT/oficina-mecanica-work-order-service/blob/main/docs/demo-manual.md#url-pública-e-variáveis) mostra como lê-la |
+| `identityBaseUrl` | `http://localhost:3001`, o Identity local | `{{baseUrl}}`: o gateway encaminha o login ao Identity |
+| `healthPath` | `api/health/ready` | `health/inventory`, porque no gateway `/api/health/*` é do Work Order |
+| `openApiPath` | `api/docs-json` | `docs/inventory`, porque no gateway `/api/docs-json` é do Work Order |
+
+A pasta Autenticação faz o login do funcionário no Identity com `adminEmail` e `adminPassword` (um `ADMIN` do seed) e grava o token em `authToken`; a collection manda `Authorization: Bearer {{authToken}}`, e só o login, os casos 401, a saúde e o Swagger dispensam o token. Os ids criados pelas requisições ficam no environment durante a execução. As rotas `/internal/...` não estão na collection: o gateway não as expõe, e os testes E2E as cobrem. As exclusões esperam 204, então precisam do Billing, dono dos orçamentos, respondendo à consulta de uso dos itens. Reserva e baixa não têm rota HTTP e são cobertas pelo e2e de mensageria.
+
+**Contra o stack local.** O login precisa do Identity local, com a chave pública dele no `.env` do Inventory; sem o Identity, pule a pasta Autenticação e passe um token de funcionário `ADMIN` assinado com o par RS256 cuja chave pública foi para o `.env` (veja [Como executar localmente](local-setup.md#chave-pública-do-token-de-funcionário)). As exclusões precisam do Billing em `QUOTE_ITEMS_SERVICE_URL` (veja [Como executar localmente](local-setup.md#api-na-máquina)):
 
 ```bash
-# A partir da raiz do repositório: rodar a collection contra o API Gateway
-npx --yes newman run collections/inventory-collection.json -e collections/inventory-environment.json --env-var baseUrl=<URL do API Gateway>
+# Subir o stack (a partir de app/) e rodar a collection
+docker compose up -d --build --wait
+npx --yes newman run ../collections/inventory-collection.json -e ../collections/inventory-environment.json
+
+# Sem o Identity local: as pastas sem login, com o token informado
+npx --yes newman run ../collections/inventory-collection.json -e ../collections/inventory-environment.json --env-var authToken=<token ADMIN> --folder "Health" --folder "Swagger" --folder "Gestão de Serviços" --folder "Gestão de Peças e Insumos" --folder "Gestão de Estoque - Relatórios" --folder "Validação"
 ```
 
-### Execução local
-
-A collection também roda contra o stack local, com a `baseUrl` `http://localhost:3003`. Localmente não há gateway: a saúde e o Swagger ficam em `/api/health/*` e `/api/docs`, e o login é do Identity, em outra porta. Por isso a execução local roda as pastas de negócio, com um token de funcionário `ADMIN` assinado com o par RS256 cuja chave pública foi para o `.env` (veja [Como executar localmente](local-setup.md#chave-pública-do-token-de-funcionário)); as exclusões esperam o Billing respondendo em `QUOTE_ITEMS_SERVICE_URL` (veja [Como executar localmente](local-setup.md#api-na-máquina)):
+**Contra o ambiente implantado**, com o ambiente no ar:
 
 ```bash
-# Subir o stack (a partir de app/) e rodar as pastas de negócio contra a API local
-docker compose up -d --build --wait
-npx --yes newman run ../collections/inventory-collection.json -e ../collections/inventory-environment.json --env-var baseUrl=http://localhost:3003 --env-var authToken=<token ADMIN> --folder "Gestão de Serviços" --folder "Gestão de Peças e Insumos" --folder "Gestão de Estoque - Relatórios" --folder "Validação"
+# A partir da raiz do repositório: rodar a collection pelo API Gateway
+npx --yes newman run collections/inventory-collection.json -e collections/inventory-gateway-environment.json --env-var baseUrl=<URL do API Gateway>
 ```
