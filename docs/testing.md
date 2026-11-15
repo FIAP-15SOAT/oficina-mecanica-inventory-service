@@ -53,12 +53,11 @@ O `engines` do `package.json` exige `node >=24.9`, e o CI roda no Node 24.
 
 ## Postman e Newman
 
-Em [`collections/`](../collections) há a collection `inventory-collection.json` e o environment `inventory-environment.json` (Postman v2.1), com health, Swagger, serviços, peças e insumos, movimentações e reservas, validações e as rotas internas. A `baseUrl` é única (`http://localhost:3003`) e a variável `authToken` guarda o token de funcionário `ADMIN`, que você assina com o par RS256 cuja chave pública foi para o `.env` (veja [Como executar localmente](local-setup.md#chave-pública-do-token-de-funcionário)); a collection manda `Authorization: Bearer {{authToken}}`, e só os casos 401 e as rotas internas dispensam o token. Os ids criados pelas requisições ficam no environment durante a execução.
+Em [`collections/`](../collections) há a collection `inventory-collection.json` e o environment `inventory-environment.json` (Postman v2.1), com health, login, Swagger, serviços, peças e insumos, movimentações e reservas e validações. A collection roda contra o API Gateway, a porta pública da solução, que encaminha cada prefixo de rota ao serviço dono. No gateway, `/api/health/*` e `/api/docs*` são do Work Order: por isso a saúde e o documento OpenAPI do Inventory ficam em `/health/inventory` e `/docs/inventory`. As rotas `/internal/...` não passam pelo gateway e não estão na collection: os testes E2E e as fixtures de contrato as cobrem. A `baseUrl` é a URL do API Gateway, que muda a cada subida do ambiente; o [manual de demonstração](https://github.com/FIAP-15SOAT/oficina-mecanica-work-order-service/blob/main/docs/demo-manual.md#url-pública-e-variáveis) mostra como lê-la. A pasta Autenticação faz o login do funcionário no Identity com `adminEmail` e `adminPassword` (um `ADMIN` do seed) e grava o token em `authToken`; a collection manda `Authorization: Bearer {{authToken}}`, e só o login, os casos 401, a saúde e o Swagger dispensam o token. Os ids criados pelas requisições ficam no environment durante a execução.
 
-As exclusões esperam 204, então precisam do Billing, dono dos orçamentos, respondendo em `QUOTE_ITEMS_SERVICE_URL` (veja [Como executar localmente](local-setup.md#api-na-máquina)). Reserva e baixa não têm rota HTTP e são cobertas pelo e2e de mensageria. Importe os dois arquivos no Postman ou rode com Newman contra o stack local:
+As exclusões esperam 204, então precisam do Billing, dono dos orçamentos, respondendo à consulta de uso dos itens. Reserva e baixa não têm rota HTTP e são cobertas pelo e2e de mensageria. Importe os dois arquivos no Postman ou rode com Newman, com o ambiente no ar:
 
 ```bash
-# Subir o stack (a partir de app/) e rodar a collection
-docker compose up -d --build --wait
-npx --yes newman run ../collections/inventory-collection.json -e ../collections/inventory-environment.json --env-var authToken=<token ADMIN>
+# A partir da raiz do repositório: rodar a collection contra o API Gateway
+npx --yes newman run collections/inventory-collection.json -e collections/inventory-environment.json --env-var baseUrl=<URL do API Gateway>
 ```
