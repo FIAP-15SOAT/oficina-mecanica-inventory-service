@@ -192,6 +192,7 @@ oficina-mecanica-inventory-service/
 | [Banco de dados](docs/database.md) | Tabelas, índices, CHECK de saldo, cache e seed |
 | [Como executar localmente](docs/local-setup.md) | Setup, variáveis de ambiente e tabela de portas locais por contexto |
 | [Testes](docs/testing.md) | Unitários, E2E com Testcontainers, rotas de teste, Postman e Newman |
+| [Manual de demonstração da solução](https://github.com/FIAP-15SOAT/oficina-mecanica-work-order-service/blob/main/docs/demo-manual.md) | Preparo do ambiente, fluxo completo da ordem de serviço, da abertura à entrega, pagamento no sandbox do Mercado Pago e falhas com compensação provocadas de fora, no work-order |
 | [CI/CD](docs/ci-cd.md) | Workflows de CI, CD, SAST e DAST |
 | [Modelo C4](docs/c4/README.md) | Componentes do serviço |
 | [Collection Postman](collections/inventory-collection.json) e [environment](collections/inventory-environment.json) | Health, Swagger, serviços, peças, estoque e rotas internas, com `baseUrl` única |

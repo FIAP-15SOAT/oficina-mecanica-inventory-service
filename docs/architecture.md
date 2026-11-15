@@ -95,4 +95,4 @@ Cada camada tem a própria hierarquia de exceções e um `APP_FILTER` global que
 
 <p align="center"><img src="c4/images/c4-component.png" alt="Diagrama de Componente C4 da API do Inventory: Guards/Segurança, Rotas Internas, Health, Catálogo, Estoque, Gateways, Mensageria, Repositories e Cache, ligados ao PostgreSQL, ao ElastiCache Valkey, ao SNS/SQS FIFO, ao Billing e ao Work Order" width="100%"></p>
 
-A descrição de cada componente e dos elementos externos está em [`docs/c4/`](c4/README.md). Os níveis 1 e 2 do C4 (contexto e containers da solução) ficam no repositório de specs.
+A descrição de cada componente e dos elementos externos está em [`docs/c4/`](c4/README.md). Os níveis 1 e 2 do C4 (contexto e containers da solução) ficam no [`docs/c4/` do Work Order](https://github.com/FIAP-15SOAT/oficina-mecanica-work-order-service/blob/main/docs/c4/README.md), o serviço de ordens de serviço.

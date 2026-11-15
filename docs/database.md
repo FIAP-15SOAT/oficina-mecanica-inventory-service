@@ -2,6 +2,12 @@
 
 PostgreSQL 18, só deste serviço, definido em [`app/prisma/schema.prisma`](../app/prisma/schema.prisma) e versionado em [`app/prisma/migrations/`](../app/prisma/migrations/). Os tipos abaixo são os do PostgreSQL gerados pelas migrations.
 
+## Diagrama entidade-relacionamento
+
+<p align="center"><img src="diagrams/database-er.png" alt="Diagrama entidade-relacionamento dos 5 modelos do schema Prisma: PartSupply (tabela parts_supplies), StockMovement (tabela stock_movements), StockReservation (tabela stock_reservations), Service (tabela services) e OutboxMessage (tabela outbox); com tipos reais do Postgres, chaves primárias, estrangeiras e únicas e as relações de uma peça ou insumo com zero ou mais movimentações e reservas; work_order_id guarda o id de uma ordem de serviço do Work Order, sem chave estrangeira" width="100%"></p>
+
+A coluna `work_order_id` (em `stock_movements`, `stock_reservations` e `outbox`) guarda o id de uma ordem de serviço do Work Order, o serviço da solução dono das ordens de serviço, sem chave estrangeira.
+
 ## Tabelas
 
 | Tabela | Conteúdo | Chaves e índices |
