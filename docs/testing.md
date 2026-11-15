@@ -61,3 +61,13 @@ As exclusões esperam 204, então precisam do Billing, dono dos orçamentos, res
 # A partir da raiz do repositório: rodar a collection contra o API Gateway
 npx --yes newman run collections/inventory-collection.json -e collections/inventory-environment.json --env-var baseUrl=<URL do API Gateway>
 ```
+
+### Execução local
+
+A collection também roda contra o stack local, com a `baseUrl` `http://localhost:3003`. Localmente não há gateway: a saúde e o Swagger ficam em `/api/health/*` e `/api/docs`, e o login é do Identity, em outra porta. Por isso a execução local roda as pastas de negócio, com um token de funcionário `ADMIN` assinado com o par RS256 cuja chave pública foi para o `.env` (veja [Como executar localmente](local-setup.md#chave-pública-do-token-de-funcionário)); as exclusões esperam o Billing respondendo em `QUOTE_ITEMS_SERVICE_URL` (veja [Como executar localmente](local-setup.md#api-na-máquina)):
+
+```bash
+# Subir o stack (a partir de app/) e rodar as pastas de negócio contra a API local
+docker compose up -d --build --wait
+npx --yes newman run ../collections/inventory-collection.json -e ../collections/inventory-environment.json --env-var baseUrl=http://localhost:3003 --env-var authToken=<token ADMIN> --folder "Gestão de Serviços" --folder "Gestão de Peças e Insumos" --folder "Gestão de Estoque - Relatórios" --folder "Validação"
+```
