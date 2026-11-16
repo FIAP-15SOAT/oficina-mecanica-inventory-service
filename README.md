@@ -218,3 +218,4 @@ oficina-mecanica-inventory-service/
 ## 📄 Licença
 
 Projeto acadêmico (FIAP, 15SOAT), para fins educacionais. Sem licença aberta declarada (`UNLICENSED`).
+
